@@ -2,22 +2,17 @@
   <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer">
     <img width="180" src="https://github.com/nickgraffis/headless-calendar-fns/blob/master/docs/public/logo.svg" alt="Vite logo">
   </a>
-  <p>Headless Calendar Functions</p>
+  <h1 align="center" >Headless Calendar Functions</h1>
 </p>
 <br/>
-<p align="center">
-  <a href="https://npmjs.com/package/vite"><img src="https://img.shields.io/npm/v/vite.svg" alt="npm package"></a>
-  <a href="https://nodejs.org/en/about/releases/"><img src="https://img.shields.io/node/v/vite.svg" alt="node compatibility"></a>
-  <a href="https://github.com/vitejs/vite/actions/workflows/ci.yml"><img src="https://github.com/vitejs/vite/actions/workflows/ci.yml/badge.svg?branch=main" alt="build status"></a>
-  <a href="https://chat.vitejs.dev"><img src="https://img.shields.io/badge/chat-discord-blue?style=flat&logo=discord" alt="discord chat"></a>
-</p>
 <br/>
-
-# Headless Calendar Fns
 
 An extendible, pure, function that returns a matrix of years, months, days, hours, and minuets for a given view and period of time. 
 
-Perfect for building a calendar ui, no matter what ui library you use, even vanilla js.
+> Perfect for building a calendar ui, no matter what ui library you use, even vanilla js.
+
+- 🔩 Plugin Interface
+- 🔑 Fully Typed
 
 ## Installation
 
