@@ -20,7 +20,7 @@ export default {
         ]
       },
       {
-        text: 'Examples',
+        text: 'Basic Examples',
         items: [
           { text: 'Demo', link: '/example-demo' },
           { text: 'Vue', link: '/example-vue' },
@@ -29,6 +29,14 @@ export default {
           { text: 'Svelte', link: '/example-svelte' },
           { text: 'Vanilla', link: '/example-vanilla' },
           { text: 'RXJS', link: '/example-rxjs' },
+        ]
+      },
+      {
+        text: 'Advanced Examples',
+        items: [
+          { text: 'Mobile', link: '/example-mobile' },
+          { text: 'Week View', link: '/example-week-view' },
+          { text: 'Day View', link: '/example-week-view' },
         ]
       }
     ]

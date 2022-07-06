@@ -52,6 +52,17 @@
       position: absolute;
       top: 1;
       left: 1;
+      height: 35px;
+      width: 35px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .day-number.active {
+      background-color: #cbd5e1;
+      color: #475569;
     }
   </style>
 </head>
@@ -91,7 +102,7 @@
           <div class="week">
             ${matrix.current.weeks[i].days.map(day => /*html*/`
               <div class="day">
-                <div class="day-number">${parseInt(day.date.split('-')[2])}</div>
+                <div class="day-number ${day.isToday && 'active'}">${parseInt(day.date.split('-')[2])}</div>
               </div>
             `).join('')}
           </div>
