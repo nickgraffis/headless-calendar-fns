@@ -62,8 +62,32 @@ export function getDaysInWeek<T = {}>(
   plugins: Plugin[]
 ): Day<T>[] {
   const days = []
+  let daysInWeek = 7
+  let startOfWeek = 0
+  let inc = 1
+  if (options?.daysInWeek) {
+    if (typeof options.daysInWeek === 'number') {
+      daysInWeek = options.daysInWeek + 1
+    } else if (typeof options.daysInWeek === 'string') {
+      if (options.daysInWeek === 'weekends') {
+        daysInWeek = 7
+        startOfWeek = 0
+        inc = 6
+      } else {
+        daysInWeek = 6
+        startOfWeek = 1
+      }
+    }
+  }
+  if (options?.startOfWeek) {
+    if (options?.daysInWeek === 'weekends' || options?.daysInWeek === 'weekdays') {
+      console.warn('setting startOfWeek with daysInWeek: weekends or weekdays can have wild results!')
+    }
+
+    startOfWeek = options.startOfWeek
+  }
   let today = (options?.timeZone ? new Date(new Date().toLocaleString("en-US", { timeZone: options.timeZone })) : new Date())
-  for (let j = (options?.startOfWeek || 0); j < (options?.daysInWeek || 7); j++) {
+  for (let j = startOfWeek; j < daysInWeek; j = j + inc) {
     const date = getDateCellByIndex(weekIndex, j, month, year)
     let pluginResults = {}
     plugins?.forEach(plugin => {
@@ -157,7 +181,18 @@ export function getHoursinDay<T = {}>(
   plugins: Plugin[]
 ): Hour<T>[] {
   let hours = []
-  for (let i = (options?.startOfDay || 0); i < (options?.hoursInDay || 24); i++) {
+  let startOfDay = 0
+  let hoursInDay = 24
+
+  if (options?.startOfDay) {
+    startOfDay = options.startOfDay
+  }
+
+  if (options?.hoursInDay) {
+    hoursInDay = startOfDay + options.hoursInDay + 1
+  }
+
+  for (let i = startOfDay; i < hoursInDay; i++) {
     let pluginResults = {}
     plugins?.forEach(plugin => {
       if (plugin.views.includes(MatrixViews.hour)) {
@@ -167,6 +202,8 @@ export function getHoursinDay<T = {}>(
         }
       }
     })
+    let _date = options?.timeZone ? new Date(new Date().toLocaleString("en-US", { timeZone: options.timeZone })) : new Date()
+    let isCurrentHour = i === _date.getHours()
     let hour = {
       date: options?.format ? 
         new Date(date).toLocaleString(
@@ -179,7 +216,7 @@ export function getHoursinDay<T = {}>(
       day: date.getDate(),
       month: date.getMonth(),
       year: date.getFullYear(),
-      isCurrentHour: date.getHours() === (options?.timeZone ? new Date(new Date().toLocaleString("en-US", { timeZone: options.timeZone })) : new Date()).getHours(),
+      isCurrentHour,
       ...pluginResults
     }
     hours.push(hour)

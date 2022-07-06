@@ -41,6 +41,7 @@ function getDateCellByIndex(weekIndex, dayIndex, month, year) {
     return dateCell;
 }
 function getDaysInWeek(weekIndex, month, year, options, plugins) {
+    var _a;
     if (options === void 0) { options = {
         includeWeeks: true,
         includeDays: true,
@@ -48,6 +49,32 @@ function getDaysInWeek(weekIndex, month, year, options, plugins) {
         includeMinutes: true
     }; }
     var days = [];
+    var daysInWeek = 7;
+    var startOfWeek = 0;
+    var inc = 1;
+    if (options === null || options === void 0 ? void 0 : options.daysInWeek) {
+        if (typeof options.daysInWeek === 'number') {
+            daysInWeek = options.daysInWeek + 1;
+        }
+        else if (typeof options.daysInWeek === 'string') {
+            if (options.daysInWeek === 'weekends') {
+                daysInWeek = 7;
+                startOfWeek = 0;
+                inc = 6;
+            }
+            else {
+                daysInWeek = 6;
+                startOfWeek = 1;
+            }
+        }
+    }
+    if (options === null || options === void 0 ? void 0 : options.startOfWeek) {
+        if ((options === null || options === void 0 ? void 0 : options.daysInWeek) === 'weekends' || (options === null || options === void 0 ? void 0 : options.daysInWeek) === 'weekdays') {
+            console.warn('setting startOfWeek with daysInWeek: weekends or weekdays can have wild results!');
+        }
+        startOfWeek = options.startOfWeek;
+    }
+    var today = ((options === null || options === void 0 ? void 0 : options.timeZone) ? new Date(new Date().toLocaleString("en-US", { timeZone: options.timeZone })) : new Date());
     var _loop_1 = function (j) {
         var date = getDateCellByIndex(weekIndex, j, month, year);
         var pluginResults = {};
@@ -56,16 +83,33 @@ function getDaysInWeek(weekIndex, month, year, options, plugins) {
                 pluginResults = __assign(__assign({}, plugin.fn(date)), pluginResults);
             }
         });
-        days.push(__assign(__assign(__assign({}, (options === null || options === void 0 ? void 0 : options.includeHours) && { hours: getHoursinDay(date, options, plugins) }), { date: date.toISOString().split('T')[0], isToday: date.getDate() === new Date().getDate() &&
-                date.getMonth() === new Date().getMonth() &&
-                date.getFullYear() === new Date().getFullYear(), isWeekend: date.getDay() === 0 || date.getDay() === 6, day: date.getDay(), week: weekIndex, month: month, year: year }), pluginResults));
+        days.push(__assign(__assign(__assign({}, (options === null || options === void 0 ? void 0 : options.includeHours) && { hours: getHoursinDay(date, options, plugins) }), { date: (options === null || options === void 0 ? void 0 : options.format) ?
+                new Date(date).toLocaleString(((_a = options === null || options === void 0 ? void 0 : options.format) === null || _a === void 0 ? void 0 : _a.locales) ||
+                    'en-US', __assign({}, options === null || options === void 0 ? void 0 : options.format)) :
+                date.toISOString().split('T')[0], isToday: date.getDate() === today.getDate() &&
+                date.getMonth() === today.getMonth() &&
+                date.getFullYear() === today.getFullYear(), isWeekend: date.getDay() === 0 || date.getDay() === 6, day: (function () {
+                if (options === null || options === void 0 ? void 0 : options.daysOfWeek) {
+                    if (Array.isArray(options.daysOfWeek)) {
+                        return options.daysOfWeek[date.getDay()];
+                    }
+                    else if (typeof options.daysOfWeek === 'string' && ['long', 'short', 'narrow'].includes(options.daysOfWeek)) {
+                        return date.toLocaleDateString('en-US', { weekday: options.daysOfWeek });
+                    }
+                }
+                else if (!options.daysOfWeek)
+                    return date.getDay();
+                else
+                    return date.getDay();
+            })(), week: weekIndex, month: month, year: year }), pluginResults));
     };
-    for (var j = 0; j < 7; j++) {
+    for (var j = startOfWeek; j < daysInWeek; j = j + inc) {
         _loop_1(j);
     }
     return days;
 }
-function getMinutesInHour(hour, date, plugins) {
+function getMinutesInHour(hour, date, options, plugins) {
+    var _a;
     var minutes = [];
     var _loop_2 = function (i) {
         var _date = new Date(date.getTime());
@@ -76,7 +120,10 @@ function getMinutesInHour(hour, date, plugins) {
                 pluginResults = __assign(__assign({}, plugin.fn(_date)), pluginResults);
             }
         });
-        minutes.push(__assign({ unix: _date.getTime(), minute: i, hour: hour, day: _date.getDate(), month: _date.getMonth(), year: _date.getFullYear(), isCurrentMinute: _date.getMinutes() === new Date().getMinutes() }, pluginResults));
+        minutes.push(__assign({ date: (options === null || options === void 0 ? void 0 : options.format) ?
+                new Date(_date).toLocaleString(((_a = options === null || options === void 0 ? void 0 : options.format) === null || _a === void 0 ? void 0 : _a.locales) ||
+                    'en-US', __assign({}, options === null || options === void 0 ? void 0 : options.format)) :
+                date.toISOString().split('T')[0], minute: i, hour: hour, day: _date.getDate(), month: _date.getMonth(), year: _date.getFullYear(), isCurrentMinute: _date.getMinutes() === new Date().getMinutes() }, pluginResults));
     };
     for (var i = 0; i < 60; i++) {
         _loop_2(i);
@@ -84,6 +131,7 @@ function getMinutesInHour(hour, date, plugins) {
     return minutes;
 }
 function getHoursinDay(date, options, plugins) {
+    var _a;
     if (options === void 0) { options = {
         includeWeeks: true,
         includeDays: true,
@@ -91,6 +139,14 @@ function getHoursinDay(date, options, plugins) {
         includeMinutes: true
     }; }
     var hours = [];
+    var startOfDay = 0;
+    var hoursInDay = 24;
+    if (options === null || options === void 0 ? void 0 : options.startOfDay) {
+        startOfDay = options.startOfDay;
+    }
+    if (options === null || options === void 0 ? void 0 : options.hoursInDay) {
+        hoursInDay = startOfDay + options.hoursInDay + 1;
+    }
     var _loop_3 = function (i) {
         var pluginResults = {};
         plugins === null || plugins === void 0 ? void 0 : plugins.forEach(function (plugin) {
@@ -98,10 +154,15 @@ function getHoursinDay(date, options, plugins) {
                 pluginResults = __assign(__assign({}, plugin.fn(new Date(date.getFullYear(), date.getMonth(), date.getDate(), i))), pluginResults);
             }
         });
-        var hour = __assign(__assign(__assign({ unix: Math.floor((date.getTime() + (i * 60 * 60 * 1000)) / 1000) }, (options === null || options === void 0 ? void 0 : options.includeMinutes) && { minutes: getMinutesInHour(i, date, plugins) }), { hour: i, day: date.getDate(), month: date.getMonth(), year: date.getFullYear(), isCurrentHour: date.getHours() === new Date().getHours() }), pluginResults);
+        var _date = (options === null || options === void 0 ? void 0 : options.timeZone) ? new Date(new Date().toLocaleString("en-US", { timeZone: options.timeZone })) : new Date();
+        var isCurrentHour = i === _date.getHours();
+        var hour = __assign(__assign(__assign({ date: (options === null || options === void 0 ? void 0 : options.format) ?
+                new Date(date).toLocaleString(((_a = options === null || options === void 0 ? void 0 : options.format) === null || _a === void 0 ? void 0 : _a.locales) ||
+                    'en-US', __assign({}, options === null || options === void 0 ? void 0 : options.format)) :
+                date.toISOString().split('T')[0] }, (options === null || options === void 0 ? void 0 : options.includeMinutes) && { minutes: getMinutesInHour(i, date, options, plugins) }), { hour: i, day: date.getDate(), month: date.getMonth(), year: date.getFullYear(), isCurrentHour: isCurrentHour }), pluginResults);
         hours.push(hour);
     };
-    for (var i = 0; i < 24; i++) {
+    for (var i = startOfDay; i < hoursInDay; i++) {
         _loop_3(i);
     }
     return hours;
@@ -240,15 +301,15 @@ function createMatrix(options) {
                 view: view,
                 current: {
                     view: view,
-                    minutes: getMinutesInHour(hour, new Date(year, month, day), plugins)
+                    minutes: getMinutesInHour(hour, new Date(year, month, day), options, plugins)
                 },
                 prev: {
                     view: view,
-                    minutes: getMinutesInHour(hour - 1, new Date(year, month, day), plugins)
+                    minutes: getMinutesInHour(hour - 1, new Date(year, month, day), options, plugins)
                 },
                 next: {
                     view: view,
-                    minutes: getMinutesInHour(hour + 1, new Date(year, month, day), plugins)
+                    minutes: getMinutesInHour(hour + 1, new Date(year, month, day), options, plugins)
                 }
             };
         default:
