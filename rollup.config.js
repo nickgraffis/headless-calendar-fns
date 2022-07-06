@@ -10,30 +10,21 @@ import { name, version, main, module, browser, author } from './package.json'
 
 const isProduction = process.env.NODE_ENV === 'production'
 
-const settings = {
-  globals: {
-    ms: 'ms'
-  },
-}
-
 export default {
   input: './src/index.ts',
   output: [{
     file: main,
     name: main,
-    ...settings,
     format: 'cjs',
     plugins: [
       isProduction && terser()
     ]
   }, {
     file: module,
-    ...settings,
     name: name,
     format: 'es'
   }, {
     file: browser,
-    ...settings,
     name: name,
     format: 'umd'
   }],
