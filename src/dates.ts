@@ -63,7 +63,7 @@ export function getDaysInWeek<T = {}>(
 ): Day<T>[] {
   const days = []
   let today = (options?.timeZone ? new Date(new Date().toLocaleString("en-US", { timeZone: options.timeZone })) : new Date())
-  for (let j = 0; j < 7; j++) {
+  for (let j = (options?.startOfWeek || 0); j < (options?.daysInWeek || 7); j++) {
     const date = getDateCellByIndex(weekIndex, j, month, year)
     let pluginResults = {}
     plugins?.forEach(plugin => {
@@ -157,7 +157,7 @@ export function getHoursinDay<T = {}>(
   plugins: Plugin[]
 ): Hour<T>[] {
   let hours = []
-  for (let i = 0; i < 24; i++) {
+  for (let i = (options?.startOfDay || 0); i < (options?.hoursInDay || 24); i++) {
     let pluginResults = {}
     plugins?.forEach(plugin => {
       if (plugin.views.includes(MatrixViews.hour)) {
