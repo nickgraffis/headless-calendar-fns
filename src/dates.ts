@@ -1,11 +1,4 @@
-import { Plugin, Day, Hour, Minute, Month, Week, MatrixViews } from "./types"
-
-export type Options = {
-  includeWeeks?: boolean
-  includeDays?: boolean
-  includeHours?: boolean
-  includeMinutes?: boolean
-}
+import { Plugin, Day, Hour, Minute, Month, Week, MatrixViews, Options } from "./types"
 
 // ✅ Promise check
 export function isPromise(p: any) {
@@ -69,6 +62,7 @@ export function getDaysInWeek<T = {}>(
   plugins: Plugin[]
 ): Day<T>[] {
   const days = []
+  let today = (options?.timeZone ? new Date(new Date().toLocaleString("en-US", { timeZone: options.timeZone })) : new Date())
   for (let j = 0; j < 7; j++) {
     const date = getDateCellByIndex(weekIndex, j, month, year)
     let pluginResults = {}
@@ -84,9 +78,9 @@ export function getDaysInWeek<T = {}>(
       ...(options?.includeHours) && { hours: getHoursinDay(date, options, plugins) },
       date: date.toISOString().split('T')[0],
       isToday: 
-        date.getDate() === new Date().getDate() && 
-        date.getMonth() === new Date().getMonth() && 
-        date.getFullYear() === new Date().getFullYear(),
+        date.getDate() === today.getDate() && 
+        date.getMonth() === today.getMonth() && 
+        date.getFullYear() === today.getFullYear(),
       isWeekend: date.getDay() === 0 || date.getDay() === 6,
       day: date.getDay(),
       week: weekIndex,
@@ -163,7 +157,7 @@ export function getHoursinDay<T = {}>(
       day: date.getDate(),
       month: date.getMonth(),
       year: date.getFullYear(),
-      isCurrentHour: date.getHours() === new Date().getHours(),
+      isCurrentHour: date.getHours() === (options?.timeZone ? new Date(new Date().toLocaleString("en-US", { timeZone: options.timeZone })) : new Date()).getHours(),
       ...pluginResults
     }
     hours.push(hour)

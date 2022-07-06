@@ -116,3 +116,9 @@ let matrix = createCalendar({
   hoursInDay: 9
 });
 ```
+
+## Performance
+
+Not sure what it is worth, but it generally takes about `8ms` to create a full calendar.
+
+And about `4MB` of heap memory to create a full calendar.

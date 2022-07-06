@@ -1,8 +1,18 @@
+import Timezone from "./timezones"
+
 export type Plugin = {
   name: string
   version: string
   views: MatrixViews[]
   fn: (date: Date, week?: number) => any
+}
+
+export type Options = {
+  includeWeeks?: boolean
+  includeDays?: boolean
+  includeHours?: boolean
+  includeMinutes?: boolean
+  timeZone?: Timezone
 }
 
 export enum MatrixViews {

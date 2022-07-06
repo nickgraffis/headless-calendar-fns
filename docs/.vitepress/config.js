@@ -4,6 +4,13 @@ export default {
   themeConfig: {
     logo: '/logo.svg',
     siteTitle: 'Headless Calendar',
+    nav: [
+      { text: 'Author', link: '/author' },
+      { text: 'Changelog', link: 'https://github.com/...' },
+    ],
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/nickgraffis/headless-calendar-fns' },
+    ],
     sidebar: [
       {
         text: 'Guide',

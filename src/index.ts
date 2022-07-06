@@ -1,5 +1,5 @@
-import { getDaysInWeek, getHoursinDay, getMinutesInHour, getMonthsInYear, getWeeksInMonth, isPromise, Options, returnsPromise } from "./dates";
-import { MatrixViews } from "./types";
+import { getDaysInWeek, getHoursinDay, getMinutesInHour, getMonthsInYear, getWeeksInMonth } from "./dates";
+import { MatrixViews, Options } from "./types";
 import type { Calendar, Plugin } from "./types";
 
 export default function createMatrix<T = {}>(
