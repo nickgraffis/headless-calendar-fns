@@ -1,8 +1,8 @@
-import { getDaysInWeek, getHoursinDay, getMinutesInHour, getMonthsInYear, getWeeksInMonth, Options } from "./dates";
+import { getDaysInWeek, getHoursinDay, getMinutesInHour, getMonthsInYear, getWeeksInMonth, isPromise, Options, returnsPromise } from "./dates";
 import { MatrixViews } from "./types";
-import type { Calendar } from "./types";
+import type { Calendar, Plugin } from "./types";
 
-export default function createMatrix(
+export default function createMatrix<T = {}>(
   options: Options & {
     view: MatrixViews,
     year: number,
@@ -10,8 +10,9 @@ export default function createMatrix(
     week?: number,
     day?: number,
     hour?: number,
+		plugins: Plugin[]
   }
-): Calendar {
+): Calendar<T> {
   const { 
     view,
     year,
@@ -19,6 +20,7 @@ export default function createMatrix(
     week,
     day,
     hour,
+		plugins,
   } = options
 
   options.includeWeeks = options.includeWeeks || true
@@ -32,15 +34,15 @@ export default function createMatrix(
         view,
         current: {
           view,
-          months: getMonthsInYear(year, options)
+          months: getMonthsInYear<T>(year, options, plugins)
         },
         prev: {
           view,
-          months: getMonthsInYear(year - 1, options)
+          months: getMonthsInYear<T>(year - 1, options, plugins)
         },
         next: {
           view,
-          months: getMonthsInYear(year + 1, options)
+          months: getMonthsInYear<T>(year + 1, options, plugins)
         }
       }
     case MatrixViews.month:
@@ -51,15 +53,15 @@ export default function createMatrix(
         view,
         current: {
           view,
-          weeks: getWeeksInMonth(month, year, options)
+          weeks: getWeeksInMonth<T>(month, year, options, plugins)
         },
         prev: {
           view,
-          weeks: getWeeksInMonth(month - 1, year, options)
+          weeks: getWeeksInMonth<T>(month - 1, year, options, plugins)
         },
         next: {
           view,
-          weeks: getWeeksInMonth(month + 1, year, options)
+          weeks: getWeeksInMonth<T>(month + 1, year, options, plugins)
         }
       }
     case MatrixViews.week:
@@ -70,15 +72,15 @@ export default function createMatrix(
         view,
         current: {
           view,
-          days: getDaysInWeek(week, month, year, options)
+          days: getDaysInWeek<T>(week, month, year, options, plugins)
         },
         prev: {
           view,
-          days: getDaysInWeek(week - 1, month, year, options)
+          days: getDaysInWeek<T>(week - 1, month, year, options, plugins)
         },
         next: {
           view,
-          days: getDaysInWeek(week + 1, month, year, options)
+          days: getDaysInWeek<T>(week + 1, month, year, options, plugins)
         }
       }
     case MatrixViews.day:
@@ -89,15 +91,15 @@ export default function createMatrix(
         view,
         current: {
           view,
-          hours: getHoursinDay(new Date(year, month, day), options)
+          hours: getHoursinDay<T>(new Date(year, month, day), options, plugins)
         },
         prev: {
           view,
-          hours: getHoursinDay(new Date(year, month, day - 1), options)
+          hours: getHoursinDay<T>(new Date(year, month, day - 1), options, plugins)
         },
         next: {
           view,
-          hours: getHoursinDay(new Date(year, month, day + 1), options)
+          hours: getHoursinDay<T>(new Date(year, month, day + 1), options, plugins)
         }
       }
     case MatrixViews.hour:
@@ -108,15 +110,15 @@ export default function createMatrix(
         view,
         current: {
           view,
-          minutes: getMinutesInHour(hour, new Date(year, month, day))
+          minutes: getMinutesInHour<T>(hour, new Date(year, month, day), plugins)
         },
         prev: {
           view,
-          minutes: getMinutesInHour(hour - 1, new Date(year, month, day))
+          minutes: getMinutesInHour<T>(hour - 1, new Date(year, month, day), plugins)
         },
         next: {
           view,
-          minutes: getMinutesInHour(hour + 1, new Date(year, month, day))
+          minutes: getMinutesInHour<T>(hour + 1, new Date(year, month, day), plugins)
         }
       }
       default:

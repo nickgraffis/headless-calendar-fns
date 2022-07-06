@@ -1,27 +1,32 @@
 {
   "name": "headless-calendar-fns",
   "version": "0.0.1",
-  "description": "Create a headless calendar with fns",
+  "description": "Creates a matrix for a headless calendar.",
   "main": "dist/headless-calendar-fns.min.js",
-  "module": "dist/headless-calendar-fns.esm.js",
+  "module": "dist/headless-calendar-fns.mjs",
   "browser": "dist/headless-calendar-fns.umd.js",
+  "types": "dist/headless-calendar-fns.d.ts",
   "scripts": {
     "build": "NODE_ENV=production rollup -c",
     "dev": "rollup -c -w",
-    "test": "node test/test.spec.js",
-    "pretest": "npm run build"
+    "test": "node test/test.spec.js && node --experimental-specifier-resolution=node test/test.spec.mjs",
+    "pretest": "npm run build",
+    "moonphase": "ts-node plugin-examples/moonphase.ts",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:serve": "vitepress serve docs"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zollero/rollup-typescript-starter-lib.git"
+    "url": "git+https://github.com/nickgraffis/headless-calendar-fns.git"
   },
   "keywords": [],
   "author": "Nick Graffis <hi@nickgraffis.me>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/zollero/rollup-typescript-starter-lib/issues"
+    "url": "https://github.com/nickgraffis/headless-calendar-fns/issues"
   },
-  "homepage": "https://github.com/zollero/rollup-typescript-starter-lib#readme",
+  "homepage": "https://github.com/nickgraffis/headless-calendar-fns#readme",
   "devDependencies": {
     "rollup": "^2.6.1",
     "rollup-plugin-commonjs": "^9.1.4",
@@ -29,7 +34,15 @@
     "rollup-plugin-license": "^2.0.0",
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-terser": "^5.3.0",
-    "rollup-plugin-typescript":  "^0.8.1",
-    "typescript": "^3.2.2"
+    "rollup-plugin-typescript": "^0.8.1",
+    "typescript": "^4.7.4",
+    "vitepress": "^1.0.0-alpha.4",
+    "vue": "^3.2.37"
+  },
+  "dependencies": {
+    "esbuild": "^0.14.48",
+    "rollup-plugin-dts": "^4.2.2",
+    "rollup-plugin-esbuild": "^4.9.1",
+    "ts-node": "^10.8.2"
   }
 }

@@ -1,4 +1,4 @@
-import type { Day, Hour, Minute, Month, Week } from "./types"
+import { Plugin, Day, Hour, Minute, Month, Week, MatrixViews } from "./types"
 
 export type Options = {
   includeWeeks?: boolean
@@ -6,6 +6,30 @@ export type Options = {
   includeHours?: boolean
   includeMinutes?: boolean
 }
+
+// ✅ Promise check
+export function isPromise(p: any) {
+  if (typeof p === 'object' && typeof p.then === 'function') {
+    return true;
+  }
+
+  return false;
+}
+
+// ✅ Check if return value is promise
+export function returnsPromise(f: Function) {
+  if (
+    f.constructor.name === 'AsyncFunction' ||
+    (typeof f === 'function' && isPromise(f()))
+  ) {
+    //console.log('✅ Function returns promise');
+    return true;
+  }
+
+  // console.log('⛔️ Function does NOT return promise');
+  return false;
+}
+
 
 export function getNumberOfWeeksInMonth(
   month: number, 
@@ -32,7 +56,7 @@ export function getDateCellByIndex(
   return dateCell
 }
 
-export function getDaysInWeek(
+export function getDaysInWeek<T = {}>(
   weekIndex: number,
   month: number,
   year: number,
@@ -41,13 +65,23 @@ export function getDaysInWeek(
     includeDays: true,
     includeHours: true,
     includeMinutes: true
-  }
-): Day[] {
+  },
+  plugins: Plugin[]
+): Day<T>[] {
   const days = []
   for (let j = 0; j < 7; j++) {
     const date = getDateCellByIndex(weekIndex, j, month, year)
+    let pluginResults = {}
+    plugins?.forEach(plugin => {
+      if (plugin.views.includes(MatrixViews.day)) {
+        pluginResults = {
+          ...plugin.fn(date),
+          ...pluginResults
+        }
+      }
+    })
     days.push({
-      ...(options?.includeHours) && { hours: getHoursinDay(date, options) },
+      ...(options?.includeHours) && { hours: getHoursinDay(date, options, plugins) },
       date: date.toISOString().split('T')[0],
       isToday: 
         date.getDate() === new Date().getDate() && 
@@ -58,20 +92,31 @@ export function getDaysInWeek(
       week: weekIndex,
       month,
       year,
+      ...pluginResults
     })
   }
 
-  return days
+  return days as Day<T>[]
 }
 
-export function getMinutesInHour(
+export function getMinutesInHour<T = {}>(
   hour: number,
   date: Date,
-): Minute[] {
+  plugins: Plugin[]
+): Minute<T>[] {
   const minutes = []
   for (let i = 0; i < 60; i++) {
     const _date = new Date(date.getTime())
     _date.setHours(hour, i)
+    let pluginResults = {}
+    plugins?.forEach(plugin => {
+      if (plugin.views.includes(MatrixViews.minute)) {
+        pluginResults = {
+          ...plugin.fn(_date),
+          ...pluginResults
+        }
+      }
+    })
     minutes.push({
       unix: _date.getTime(),
       minute: i,
@@ -80,42 +125,54 @@ export function getMinutesInHour(
       month: _date.getMonth(),
       year: _date.getFullYear(),
       isCurrentMinute: _date.getMinutes() === new Date().getMinutes(),
+      ...pluginResults
     })
   }
-  return minutes
+  return minutes as Minute<T>[]
 }
 
-export function getHoursinDay(
+export function getHoursinDay<T = {}>(
   date: Date,
   options: Options = {
     includeWeeks: true,
     includeDays: true,
     includeHours: true,
     includeMinutes: true
-  }
-): Hour[] {
+  },
+  plugins: Plugin[]
+): Hour<T>[] {
   let hours = []
   for (let i = 0; i < 24; i++) {
+    let pluginResults = {}
+    plugins?.forEach(plugin => {
+      if (plugin.views.includes(MatrixViews.hour)) {
+        pluginResults = {
+          ...plugin.fn(new Date(date.getFullYear(), date.getMonth(), date.getDate(), i)),
+          ...pluginResults
+        }
+      }
+    })
     let hour = {
       unix: Math.floor(
         (
           date.getTime() + (i * 60 * 60 * 1000)
         ) / 1000
       ),
-      ...(options?.includeMinutes) && { minutes: getMinutesInHour(i, date) },
+      ...(options?.includeMinutes) && { minutes: getMinutesInHour(i, date, plugins) },
       hour: i,
       day: date.getDate(),
       month: date.getMonth(),
       year: date.getFullYear(),
-      isCurrentHour: date.getHours() === new Date().getHours()
+      isCurrentHour: date.getHours() === new Date().getHours(),
+      ...pluginResults
     }
     hours.push(hour)
   }
 
-  return hours
+  return hours as Hour<T>[]
 }
 
-export function getWeeksInMonth(
+export function getWeeksInMonth<T = {}>(
   month: number, 
   year: number,
   options: Options = {
@@ -123,37 +180,59 @@ export function getWeeksInMonth(
     includeDays: true,
     includeHours: true,
     includeMinutes: true
-  }
-): Week[] {
+  },
+  plugins: Plugin[]
+): Week<T>[] {
   const weeks: Week[] = []
   const numberOfWeeks = getNumberOfWeeksInMonth(month, year)
   for (let i = 0; i < numberOfWeeks; i++) {
+    let pluginResults = {}
+    plugins?.forEach(plugin => {
+      if (plugin.views.includes(MatrixViews.week)) {
+        pluginResults = {
+          ...plugin.fn(new Date(year, month), i),
+          ...pluginResults
+        }
+      }
+    })
     weeks.push({
-      ...(options.includeDays) && { days: getDaysInWeek(i, month, year, options) },
+      ...(options.includeDays) && { days: getDaysInWeek(i, month, year, options, plugins) },
       week: i,
       year,
       month,
+      ...pluginResults
     })
   }
-  return weeks
+  return weeks as Week<T>[]
 }
 
-export function getMonthsInYear(
+export function getMonthsInYear<T = {}>(
   year: number,
   options: Options = {
     includeWeeks: true,
     includeDays: true,
     includeHours: true,
-    includeMinutes: true
-  }
-): Month[] {
+    includeMinutes: true,
+  },
+  plugins: Plugin[]
+): Month<T>[] {
   const months: Month[] = []
   for (let i = 0; i < 12; i++) {
+    let pluginResults = {}
+    plugins?.forEach(plugin => {
+      if (plugin.views.includes(MatrixViews.month)) {
+        pluginResults = {
+          ...plugin.fn(new Date(year, i)),
+          ...pluginResults
+        }
+      }
+    })
     months.push({
-      ...(options.includeWeeks) && { weeks: getWeeksInMonth(i, year, options) },
+      ...(options.includeWeeks) && { weeks: getWeeksInMonth(i, year, options, plugins) },
       month: i,
       year,
+      ...pluginResults
     })
   }
-  return months
+  return months as Month<T>[]
 }
