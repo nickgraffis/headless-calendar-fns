@@ -1,8 +1,18 @@
-# Headless Calendar Fns
+<p align="center">
+  <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer">
+    <img width="180" src="https://github.com/nickgraffis/headless-calendar-fns/blob/master/docs/public/logo.svg" alt="Vite logo">
+  </a>
+  <h1 align="center" >Headless Calendar Functions</h1>
+</p>
+<br/>
+<br/>
 
 An extendible, pure, function that returns a matrix of years, months, days, hours, and minuets for a given view and period of time. 
 
-Perfect for building a calendar ui, no matter what ui library you use, even vanilla js.
+> Perfect for building a calendar ui, no matter what ui library you use, even vanilla js.
+
+- 🔩 Plugin Interface
+- 🔑 Fully Typed
 
 ## Installation
 
