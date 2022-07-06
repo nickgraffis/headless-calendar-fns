@@ -2,6 +2,7 @@
   <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer">
     <img width="180" src="https://github.com/nickgraffis/headless-calendar-fns/blob/master/docs/public/logo.svg" alt="Vite logo">
   </a>
+  <p>Headless Calendar Functions</p>
 </p>
 <br/>
 <p align="center">
