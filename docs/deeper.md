@@ -2,7 +2,7 @@
 
 ## Timezones
 
-Inside of the `hour`, `day`, and `minute` views you get a `isCurrentHour`, `isToday`, and `isCurrentMinute` boolean. When you pass in a timezone to your function it will use that timezone when determining the current hour, day, or minute.
+Inside of the `hour`, `day`, and `minute` views you get a `isCurrentHour`, `isToday`, and `isCurrentMinute` boolean. When you pass in a `timeZone` to your function it will use that timezone when determining the current hour, day, or minute.
 
 ```js
 import createCalendar from 'headless-calendar-fns';
@@ -11,7 +11,7 @@ let matrix = createCalendar({
   view: 'year',
   year: 2022,
   month: 1,
-  timezone: 'America/New_York'
+  timeZone: 'America/New_York'
 });
 ```
 
@@ -57,9 +57,9 @@ let matrix = createCalendar({
 
 ### Day of Week
 
-If you want to get the day of the week, instead of the index in the response, you can pass in argument `dayOfWeek` as either a `boolean`, where if `true` the result will include an English _long_ day name, and if `fale` (_default_) just the index.
+If you want to get the day of the week, instead of the index in the response, you can pass in argument `dayOfWeek` as either a `boolean`, where if `true` the result will include an English _long_ day name, and if `false` (_default_) just the index.
 
-You can also pass in either `'long'`, `'short'`, or `'letter'` to specify the kind of day formatting (_Monday_, _Mon_, _M_), for example.
+You can also pass in either `'long'`, `'short'`, or `'narrow'` to specify the kind of day formatting (_Monday_, _Mon_, _M_), for example.
 
 You can also pass in an array of strings, and it will return the value of string for that day's index.
 

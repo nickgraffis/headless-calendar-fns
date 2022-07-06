@@ -76,13 +76,28 @@ export function getDaysInWeek<T = {}>(
     })
     days.push({
       ...(options?.includeHours) && { hours: getHoursinDay(date, options, plugins) },
-      date: date.toISOString().split('T')[0],
+      date: 
+        options?.format ? 
+          new Date(date).toLocaleString(
+            options?.format?.locales || 
+            'en-US', { ...options?.format }
+          ) : 
+          date.toISOString().split('T')[0],
       isToday: 
         date.getDate() === today.getDate() && 
         date.getMonth() === today.getMonth() && 
         date.getFullYear() === today.getFullYear(),
       isWeekend: date.getDay() === 0 || date.getDay() === 6,
-      day: date.getDay(),
+      day: (() => {
+        if (options?.daysOfWeek) {
+          if (Array.isArray(options.daysOfWeek)) {
+            return options.daysOfWeek[date.getDay()]
+          } else if (typeof options.daysOfWeek === 'string' && ['long', 'short', 'narrow'].includes(options.daysOfWeek)) {
+            return date.toLocaleDateString('en-US', { weekday: options.daysOfWeek })
+          }
+        } else if (!options.daysOfWeek) return date.getDay()
+        else return date.getDay()
+      })(),
       week: weekIndex,
       month,
       year,
@@ -96,6 +111,7 @@ export function getDaysInWeek<T = {}>(
 export function getMinutesInHour<T = {}>(
   hour: number,
   date: Date,
+  options: Options,
   plugins: Plugin[]
 ): Minute<T>[] {
   const minutes = []
@@ -112,7 +128,12 @@ export function getMinutesInHour<T = {}>(
       }
     })
     minutes.push({
-      unix: _date.getTime(),
+      date: options?.format ? 
+        new Date(_date).toLocaleString(
+          options?.format?.locales || 
+          'en-US', { ...options?.format }
+        ) : 
+        date.toISOString().split('T')[0],
       minute: i,
       hour,
       day: _date.getDate(),
@@ -147,12 +168,13 @@ export function getHoursinDay<T = {}>(
       }
     })
     let hour = {
-      unix: Math.floor(
-        (
-          date.getTime() + (i * 60 * 60 * 1000)
-        ) / 1000
-      ),
-      ...(options?.includeMinutes) && { minutes: getMinutesInHour(i, date, plugins) },
+      date: options?.format ? 
+        new Date(date).toLocaleString(
+          options?.format?.locales || 
+          'en-US', { ...options?.format }
+        ) : 
+        date.toISOString().split('T')[0],
+      ...(options?.includeMinutes) && { minutes: getMinutesInHour(i, date, options, plugins) },
       hour: i,
       day: date.getDate(),
       month: date.getMonth(),

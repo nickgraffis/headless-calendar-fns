@@ -13,6 +13,20 @@ export type Options = {
   includeHours?: boolean
   includeMinutes?: boolean
   timeZone?: Timezone
+  startOfDay?: number
+  hoursInDay?: number
+  daysInWeek?: number[] | 'weekends' | 'weekdays'
+  startOfWeek?: number
+  daysOfWeek?: string[] | 'long' | 'short' | 'narrow' | boolean
+  format?: {
+    locales?: string, // default: 'en-US'
+    day?: 'numeric' | '2-digit',
+    month?: 'numeric' | '2-digit' | 'long' | 'short' | 'narrow',
+    year?: 'numeric' | '2-digit',
+    weekday?: 'long' | 'short' | 'narrow',
+    hour?: 'numeric' | '2-digit',
+    minute?: 'numeric' | '2-digit',
+  }
 }
 
 export enum MatrixViews {
@@ -41,7 +55,7 @@ export type Calendar<T = {}> = {
 }
 
 export type Minute<T = {}> = {
-	unix: number
+	date: string
 	minute: number
 	hour: number
 	day: number
@@ -51,7 +65,7 @@ export type Minute<T = {}> = {
 } & T
 
 export type Hour<T = {}> = {
-	unix: number
+	date: string
 	minutes?: Minute[]
 	hour: number
 	day: number

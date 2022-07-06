@@ -110,15 +110,15 @@ export default function createMatrix<T = {}>(
         view,
         current: {
           view,
-          minutes: getMinutesInHour<T>(hour, new Date(year, month, day), plugins)
+          minutes: getMinutesInHour<T>(hour, new Date(year, month, day), options, plugins)
         },
         prev: {
           view,
-          minutes: getMinutesInHour<T>(hour - 1, new Date(year, month, day), plugins)
+          minutes: getMinutesInHour<T>(hour - 1, new Date(year, month, day), options, plugins)
         },
         next: {
           view,
-          minutes: getMinutesInHour<T>(hour + 1, new Date(year, month, day), plugins)
+          minutes: getMinutesInHour<T>(hour + 1, new Date(year, month, day), options, plugins)
         }
       }
       default:
