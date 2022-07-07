@@ -1,6 +1,7 @@
 {
   "name": "headless-calendar-fns",
   "version": "0.0.1",
+  "accesss": "public",
   "description": "Creates a matrix for a headless calendar.",
   "main": "dist/headless-calendar-fns.min.js",
   "module": "dist/headless-calendar-fns.mjs",

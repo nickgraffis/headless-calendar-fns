@@ -2,7 +2,7 @@
 
 An extendible, pure, function that returns a matrix of years, months, days, hours, and minuets for a given view and period of time. 
 
-Perfect for building a calendar ui, no matter what ui library you use, even vanilla js.
+Perfect for building a calendar ui, no matter what ui library you use, or using vanilla js.
 
 ## Installation
 
@@ -21,6 +21,8 @@ _or use npm or pnpm_
 ## Basic Useage
 
 A basic view may be to create a matrix of _months_, _weeks_, and _days_.
+
+You can also create more [views](#views) like _hours_, and _minuets_.
 
 ```js
 import createMatrix from 'headless-calendar-fns';

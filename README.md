@@ -9,7 +9,7 @@
 
 An extendible, pure, function that returns a matrix of years, months, days, hours, and minuets for a given view and period of time. 
 
-> Perfect for building a calendar ui, no matter what ui library you use, even vanilla js.
+> Perfect for building a calendar ui, no matter what ui library you use, or using vanilla js.
 
 - 🔩 Plugin Interface
 - 🔑 Fully Typed
