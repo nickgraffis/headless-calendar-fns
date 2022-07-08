@@ -1,6 +1,6 @@
 {
   "name": "headless-calendar-matrix",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "accesss": "public",
   "description": "Creates a matrix for a headless calendar.",
   "main": "dist/headless-calendar-matrix.js",
