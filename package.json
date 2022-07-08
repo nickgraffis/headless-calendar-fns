@@ -1,14 +1,29 @@
 {
-  "name": "headless-calendar-fns",
+  "name": "headless-calendar-matrix",
   "version": "0.0.1",
   "accesss": "public",
   "description": "Creates a matrix for a headless calendar.",
-  "main": "dist/headless-calendar-fns.min.js",
-  "module": "dist/headless-calendar-fns.mjs",
-  "browser": "dist/headless-calendar-fns.umd.js",
-  "types": "dist/headless-calendar-fns.d.ts",
+  "main": "dist/headless-calendar-matrix.js",
+  "module": "dist/es/headless-calendar-matrix.js",
+  "typings": "dist/rolheadless-calendar-matrixlup.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "node": {
+        "require": "./dist/umd/headless-calendar-matrix.js",
+        "import": "./dist/es/headless-calendar-matrix.js"
+      },
+      "default": "./dist/es/headless-calendar-matrix.browser.js"
+    },
+    "./dist/*": "./dist/*"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/*.d.ts"
+  ],
   "scripts": {
-    "build": "NODE_ENV=production rollup -c",
+    "tsc": "tsc",
+    "build": "NODE_ENV=production vite build",
     "dev": "rollup -c -w",
     "test": "node test/test.spec.js && node --experimental-specifier-resolution=node test/test.spec.mjs",
     "pretest": "npm run build",
@@ -41,9 +56,12 @@
     "vue": "^3.2.37"
   },
   "dependencies": {
+    "@rollup/plugin-typescript": "^8.3.3",
     "esbuild": "^0.14.48",
     "rollup-plugin-dts": "^4.2.2",
     "rollup-plugin-esbuild": "^4.9.1",
-    "ts-node": "^10.8.2"
+    "rollup-plugin-typescript2": "^0.32.1",
+    "ts-node": "^10.8.2",
+    "vite": "^2.9.14"
   }
 }
