@@ -1,17 +1,17 @@
 {
   "name": "headless-calendar-matrix",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "accesss": "public",
   "description": "Creates a matrix for a headless calendar.",
   "main": "dist/headless-calendar-matrix.js",
-  "module": "dist/es/headless-calendar-matrix.js",
-  "typings": "dist/rolheadless-calendar-matrixlup.d.ts",
+  "module": "dist/es/headless-calendar-matrix.mjs",
+  "typings": "dist/types/headless-calendar-matrixlup.d.ts",
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
       "node": {
         "require": "./dist/umd/headless-calendar-matrix.js",
-        "import": "./dist/es/headless-calendar-matrix.js"
+        "import": "./dist/es/headless-calendar-matrix.mjs"
       },
       "default": "./dist/es/headless-calendar-matrix.browser.js"
     },
@@ -44,24 +44,22 @@
   },
   "homepage": "https://github.com/nickgraffis/headless-calendar-fns#readme",
   "devDependencies": {
+    "@rollup/plugin-typescript": "^8.3.3",
+    "esbuild": "^0.14.48",
     "rollup": "^2.6.1",
     "rollup-plugin-commonjs": "^9.1.4",
+    "rollup-plugin-dts": "^4.2.2",
+    "rollup-plugin-esbuild": "^4.9.1",
     "rollup-plugin-json": "^3.0.0",
     "rollup-plugin-license": "^2.0.0",
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-terser": "^5.3.0",
     "rollup-plugin-typescript": "^0.8.1",
-    "typescript": "^4.7.4",
-    "vitepress": "^1.0.0-alpha.4",
-    "vue": "^3.2.37"
-  },
-  "dependencies": {
-    "@rollup/plugin-typescript": "^8.3.3",
-    "esbuild": "^0.14.48",
-    "rollup-plugin-dts": "^4.2.2",
-    "rollup-plugin-esbuild": "^4.9.1",
     "rollup-plugin-typescript2": "^0.32.1",
     "ts-node": "^10.8.2",
-    "vite": "^2.9.14"
+    "typescript": "^4.7.4",
+    "vite": "^2.9.14",
+    "vitepress": "^1.0.0-alpha.4",
+    "vue": "^3.2.37"
   }
 }
