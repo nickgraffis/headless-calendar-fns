@@ -1,24 +1,26 @@
 {
   "name": "headless-calendar-matrix",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "accesss": "public",
   "description": "Creates a matrix for a headless calendar.",
   "main": "dist/headless-calendar-matrix.js",
-  "module": "dist/es/headless-calendar-matrix.mjs",
-  "typings": "dist/types/headless-calendar-matrixlup.d.ts",
+  "module": "dist/headless-calendar-matrix.mjs",
+  "typings": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
+      "types": "./dist/index.d.ts",
       "node": {
-        "require": "./dist/umd/headless-calendar-matrix.js",
-        "import": "./dist/es/headless-calendar-matrix.mjs"
+        "require": "./dist/headless-calendar-matrix.cjs",
+        "import": "./dist/headless-calendar-matrix.mjs"
       },
-      "default": "./dist/es/headless-calendar-matrix.browser.js"
+      "default": "./dist/headless-calendar-matrix.js"
     },
     "./dist/*": "./dist/*"
   },
   "files": [
     "dist/**/*.js",
+    "dist/**/*.mjs",
+    "dist/**/*.cjs",
     "dist/*.d.ts"
   ],
   "scripts": {
