@@ -14,24 +14,38 @@ let matrix = createCalendar({
   view: 'year',
   year: 2022,
   month: 1,
-  plugins: [moonPhaseCalendarPlugin]
+  plugins: [moonPhaseCalendarPlugin()]
 });
 
 ```
 
 ## Writing a Plugin
 
-A plugin is an object that contains a `name`, `view`, an optional `version`, and a `fn` that is a function that returns some data, that will be added to the specificed view.
+A plugin is a function that accepts some optional arguments and returns object that contains a `name`, `views`, an optional `version`, and a `fn` that is a function that returns some data, that will be added to the specificed view.
 
 ```js
-export const moonPhaseHeadlessCalendarFnsPlugin = {
+export const moonPhaseHeadlessCalendarFnsPlugin = () => ({
   name: 'moon-phase',
-  view: 'day',
-  version: '1.0.0',
+  views: ['day'],
+  version: '0.0.1',
   fn: (date) => ({
       phase: getMoonPhase(date)
     })
-}
+})
+```
+
+If your plugin requires some arguments, you will get those back in the `fn` function arguments.
+
+```js 
+export const sunriseSunsetHeadlessCalendarMatrixPlugin = (args) => ({
+  name: 'sunrise-sunset',
+  views: ['day'],
+  version: '0.0.1',
+  fn: (date, args) => ({
+      sunrise: getSunrise(date, args), // args here are coordinates
+      sunset: getSunset(date, args) // args here are coordinates
+    })
+})
 ```
 
 Because this is being applied to the _day_ view it will be run every time a new day view is created. 
@@ -55,6 +69,8 @@ Checkout these plugins:
     * Adds the sunrise and sunset to the _day_ view
     * Adds the sunrise and sunset to the _hour_ view
     * Adds the sunrise and sunset to the _minute_ view
+  * [headless-calendar-matrix-plugin-zodiac]():
+    * Adds the zodiac sign to the _day_ view
 
 ## Async Plugins
 

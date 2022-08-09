@@ -1,6 +1,6 @@
-import { getDaysInWeek, getHoursinDay, getMinutesInHour, getMonthsInYear, getWeeksInMonth } from "./dates";
-import { MatrixViews, Options } from "./types";
-import type { Calendar, Plugin } from "./types";
+import { getDaysInWeek, getHoursinDay, getMinutesInHour, getMonthsInYear, getWeeksInMonth, getYears } from "./dates";
+import { MatrixViews } from "./types";
+import type { Calendar, Plugin, Options } from "./types";
 
 export default function createMatrix<T = {}>(
   options: Options & {
@@ -10,7 +10,7 @@ export default function createMatrix<T = {}>(
     week?: number,
     day?: number,
     hour?: number,
-		plugins: Plugin[]
+		plugins?: Plugin[]
   }
 ): Calendar<T> {
   const { 
@@ -23,13 +23,40 @@ export default function createMatrix<T = {}>(
 		plugins,
   } = options
 
+  options.includeMonths = options.includeMonths || true
   options.includeWeeks = options.includeWeeks || true
   options.includeDays = options.includeDays || true
   options.includeHours = options.includeHours || false
   options.includeMinutes = options.includeMinutes || false
 
+  let loadedPluginData;
+  if (options?.plugins?.some(plugin => plugin?.load)) {
+    for (const plugin of options.plugins) {
+      if (plugin.load) {
+        // loadedPluginData = await plugin.load(options);
+      }
+    }
+  }
+
+
   switch(view) {
-    case MatrixViews.year:
+    case 'year':
+      return {
+        view,
+        prev: {
+          view: 'year',
+          year: getYears<T>(year -1, options, plugins),
+        },
+        current: {
+          view: 'year',
+          year: getYears<T>(year, options, plugins),
+        },
+        next: {
+          view: 'year',
+          year: getYears<T>(year + 1, options, plugins),
+        }
+      }
+    case 'month':
       return {
         view,
         current: {
@@ -45,8 +72,8 @@ export default function createMatrix<T = {}>(
           months: getMonthsInYear<T>(year + 1, options, plugins)
         }
       }
-    case MatrixViews.month:
-      if (!month || !year) {
+    case 'week':
+      if ((!month && month !== 0) || !year) {
         throw new Error('month and year is required, when creating a matrix for month view')
       }
       return {
@@ -64,7 +91,7 @@ export default function createMatrix<T = {}>(
           weeks: getWeeksInMonth<T>(month + 1, year, options, plugins)
         }
       }
-    case MatrixViews.week:
+    case 'day':
       if (!week || !month || !year) {
         throw new Error('week, month, year is required, when creating a matrix for week view')
       }
@@ -83,7 +110,7 @@ export default function createMatrix<T = {}>(
           days: getDaysInWeek<T>(week + 1, month, year, options, plugins)
         }
       }
-    case MatrixViews.day:
+    case 'hour':
       if (!day || !month || !year) {
         throw new Error('day, month, year is required, when creating a matrix for day view')
       }
@@ -102,7 +129,7 @@ export default function createMatrix<T = {}>(
           hours: getHoursinDay<T>(new Date(year, month, day + 1), options, plugins)
         }
       }
-    case MatrixViews.hour:
+    case 'minute':
       if (!hour || !day || !month || !year) {
         throw new Error('hour, day, month, year is required, when creating a matrix for hour view')
       }

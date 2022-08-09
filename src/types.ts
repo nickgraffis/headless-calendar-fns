@@ -1,13 +1,18 @@
 import Timezone from "./timezones"
 
 export type Plugin = {
+  args?: any,
   name: string
   version: string
   views: MatrixViews[]
-  fn: (date: Date, week?: number) => any
+  fn: (date: Date, args?: any, week?: number) => any,
+  load?: (args?: any) => Promise<any>
 }
 
+export type PluginArg = (args: any) => Plugin
+
 export type Options = {
+  includeMonths?: boolean
   includeWeeks?: boolean
   includeDays?: boolean
   includeHours?: boolean
@@ -15,7 +20,7 @@ export type Options = {
   timeZone?: Timezone
   startOfDay?: number
   hoursInDay?: number
-  daysInWeek?: number[] | 'weekends' | 'weekdays'
+  daysInWeek?: number | 'weekends' | 'weekdays'
   startOfWeek?: number
   daysOfWeek?: string[] | 'long' | 'short' | 'narrow' | boolean
   format?: {
@@ -26,25 +31,25 @@ export type Options = {
     weekday?: 'long' | 'short' | 'narrow',
     hour?: 'numeric' | '2-digit',
     minute?: 'numeric' | '2-digit',
-  }
+  },
 }
 
-export enum MatrixViews {
-  year = 'year',
-  month = 'month',
-  week = 'week',
-  day = 'day',
-  hour = 'hour',
-  minute = 'minute'
-}
+export type MatrixViews = 'year' | 'month' | 'week' | 'day' | 'hour' | 'minute'
 
 export type Matrix<T = {}> = {
   view: MatrixViews
+  year?: Year<T>
   months?: Month<T>[]
   weeks?: Week<T>[]
   days?: Day<T>[]
   hours?: Hour<T>[]
   minutes?: Minute<T>[]
+  currentDay?: number
+  currentMonth?: number
+  currentYear?: number
+  currentHour?: number
+  currentMinute?: number
+  currentWeek?: number
 }
 
 export type Calendar<T = {}> = {
@@ -82,7 +87,7 @@ export type Day<T = {}> = {
   week: number
   month: number
   year: number
-  day: number
+  day: string | number
 } & T
 
 export type Week<T = {}> = {
@@ -90,19 +95,18 @@ export type Week<T = {}> = {
 	week: number
 	month: number
 	year: number
+  isCurrentWeek: boolean
 } & T
 
 export type Month<T = {}> = {
 	weeks?: Week[]
 	month: number
 	year: number
+  isCurrentMonth: boolean
 } & T
 
 export type Year<T = {}> = {
 	months?: Month[]
 	year: number
+  isCurrentYear: boolean
 } & T
-
-export type Event = {
-  
-}

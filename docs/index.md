@@ -1,6 +1,21 @@
-# Headless Calendar Fns
+<script setup>
+  import { ref } from "vue";
 
-An extendible, pure, function that returns a matrix of years, months, days, hours, and minuets for a given view and period of time. 
+  const date = ref(new Date());
+  const nextMonth = () => {
+    if (date.value.getMonth() + 1 > 11) {
+      date.value = new Date(date.value.getFullYear() + 1, 0);
+    } else {
+      date.value = new Date(date.value.getFullYear(), date.value.getMonth() + 1);
+    }
+  };
+</script>
+
+<div style="display: flex; align-items:center;" @click="nextMonth">
+  <Zodiac :date="date"/>
+  <h1>&nbsp; Headless Calendar Matrix</h1>
+</div>
+An extendible, pure, functional approach that returns a matrix of years, months, days, hours, and minuets for a given view and period of time. 
 
 Perfect for building a calendar ui, no matter what ui library you use, or using vanilla js.
 
@@ -13,9 +28,13 @@ yarn add headless-calendar-fns
 
 _or use npm or pnpm_
 
-### CDN 
+### CDN
 ```html
-<script src="https://unpkg.com/headless-calendar-fns@latest/dist/headless-calendar-fns.js"></script>
+<script src="https://unpkg.com/headless-calendar-matrix@latest/dist/headless-calendar-matrix.min.js"></script>
+
+<script>
+  createMatrix({ view: 'year', year: 2020 });
+</script>
 ```
 
 ## Basic Useage
@@ -29,8 +48,7 @@ import createMatrix from 'headless-calendar-fns';
 
 let matrix = createMatrix({
   view: 'month',
-  year: 2022,
-  month: 1,
+  year: 2022
 })
 
 ```
@@ -75,12 +93,14 @@ let response = {
             },
             ...
           ],
+          isCurrentWeek: false,
           week: 0,
           year: 2020,
           month: 0,
         }
           ...
         ],
+        isCurrentMonth, false,
         month: 1,
         year: 2020
       },

@@ -1,4 +1,4 @@
-import { Plugin, Day, Hour, Minute, Month, Week, MatrixViews, Options } from "./types"
+import type { Plugin, Day, Hour, Minute, Month, Week, Options, Year } from "./types"
 
 // ✅ Promise check
 export function isPromise(p: any) {
@@ -34,6 +34,14 @@ export function getNumberOfWeeksInMonth(
   return Math.ceil((lastDay + day) / 7)
 }
 
+export function getNumberOfDaysInMonth(
+  month: number,
+  year: number
+): number {
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  return lastDay
+}
+
 export function getDateCellByIndex(
   weekIndex: number, 
   dayIndex: number, 
@@ -53,15 +61,10 @@ export function getDaysInWeek<T = {}>(
   weekIndex: number,
   month: number,
   year: number,
-  options: Options = {
-    includeWeeks: true,
-    includeDays: true,
-    includeHours: true,
-    includeMinutes: true
-  },
-  plugins: Plugin[]
+  options: Options,
+  plugins?: Plugin[]
 ): Day<T>[] {
-  const days = []
+  const days: Day[] = []
   let daysInWeek = 7
   let startOfWeek = 0
   let inc = 1
@@ -91,13 +94,24 @@ export function getDaysInWeek<T = {}>(
     const date = getDateCellByIndex(weekIndex, j, month, year)
     let pluginResults = {}
     plugins?.forEach(plugin => {
-      if (plugin.views.includes(MatrixViews.day)) {
+      if (plugin.views.includes('day')) {
         pluginResults = {
-          ...plugin.fn(date),
+          ...plugin.fn(date, plugin.args),
           ...pluginResults
         }
       }
     })
+
+    let day: string | number = date.getDay();
+    if (options?.daysOfWeek) {
+      if (Array.isArray(options.daysOfWeek)) {
+        day = options.daysOfWeek[date.getDay()]
+      } else if (typeof options.daysOfWeek === 'string' && ['long', 'short', 'narrow'].includes(options.daysOfWeek)) {
+        day = date.toLocaleDateString('en-US', { weekday: options.daysOfWeek })
+      }
+    } else if (!options.daysOfWeek) day = date.getDay()
+    else day = date.getDay()
+    
     days.push({
       ...(options?.includeHours) && { hours: getHoursinDay(date, options, plugins) },
       date: 
@@ -112,16 +126,7 @@ export function getDaysInWeek<T = {}>(
         date.getMonth() === today.getMonth() && 
         date.getFullYear() === today.getFullYear(),
       isWeekend: date.getDay() === 0 || date.getDay() === 6,
-      day: (() => {
-        if (options?.daysOfWeek) {
-          if (Array.isArray(options.daysOfWeek)) {
-            return options.daysOfWeek[date.getDay()]
-          } else if (typeof options.daysOfWeek === 'string' && ['long', 'short', 'narrow'].includes(options.daysOfWeek)) {
-            return date.toLocaleDateString('en-US', { weekday: options.daysOfWeek })
-          }
-        } else if (!options.daysOfWeek) return date.getDay()
-        else return date.getDay()
-      })(),
+      day,
       week: weekIndex,
       month,
       year,
@@ -136,17 +141,17 @@ export function getMinutesInHour<T = {}>(
   hour: number,
   date: Date,
   options: Options,
-  plugins: Plugin[]
+  plugins?: Plugin[]
 ): Minute<T>[] {
-  const minutes = []
+  const minutes: Minute[] = []
   for (let i = 0; i < 60; i++) {
     const _date = new Date(date.getTime())
     _date.setHours(hour, i)
     let pluginResults = {}
     plugins?.forEach(plugin => {
-      if (plugin.views.includes(MatrixViews.minute)) {
+      if (plugin.views.includes('minute')) {
         pluginResults = {
-          ...plugin.fn(_date),
+          ...plugin.fn(_date, plugin.args),
           ...pluginResults
         }
       }
@@ -178,9 +183,9 @@ export function getHoursinDay<T = {}>(
     includeHours: true,
     includeMinutes: true
   },
-  plugins: Plugin[]
+  plugins?: Plugin[]
 ): Hour<T>[] {
-  let hours = []
+  let hours: Hour[] = []
   let startOfDay = 0
   let hoursInDay = 24
 
@@ -195,9 +200,9 @@ export function getHoursinDay<T = {}>(
   for (let i = startOfDay; i < hoursInDay; i++) {
     let pluginResults = {}
     plugins?.forEach(plugin => {
-      if (plugin.views.includes(MatrixViews.hour)) {
+      if (plugin.views.includes('hour')) {
         pluginResults = {
-          ...plugin.fn(new Date(date.getFullYear(), date.getMonth(), date.getDate(), i)),
+          ...plugin.fn(new Date(date.getFullYear(), date.getMonth(), date.getDate(), i), plugin.args),
           ...pluginResults
         }
       }
@@ -225,6 +230,16 @@ export function getHoursinDay<T = {}>(
   return hours as Hour<T>[]
 }
 
+export function getCurrentWeek(month: number, year: number) {
+  const date = new Date()
+  const day = date.getDate()
+  const firstDayOfMonth = new Date(year, month, 1)
+  const firstDayOfWeek = firstDayOfMonth.getDay()
+  const firstDayOfWeekInMonth = day - firstDayOfWeek
+  const week = Math.ceil(firstDayOfWeekInMonth / 7)
+  return week
+}
+
 export function getWeeksInMonth<T = {}>(
   month: number, 
   year: number,
@@ -234,16 +249,16 @@ export function getWeeksInMonth<T = {}>(
     includeHours: true,
     includeMinutes: true
   },
-  plugins: Plugin[]
+  plugins?: Plugin[]
 ): Week<T>[] {
   const weeks: Week[] = []
   const numberOfWeeks = getNumberOfWeeksInMonth(month, year)
   for (let i = 0; i < numberOfWeeks; i++) {
     let pluginResults = {}
     plugins?.forEach(plugin => {
-      if (plugin.views.includes(MatrixViews.week)) {
+      if (plugin.views.includes('week')) {
         pluginResults = {
-          ...plugin.fn(new Date(year, month), i),
+          ...plugin.fn(new Date(year, month), plugin.args, i),
           ...pluginResults
         }
       }
@@ -253,6 +268,7 @@ export function getWeeksInMonth<T = {}>(
       week: i,
       year,
       month,
+      isCurrentWeek: i === getCurrentWeek(month, year),
       ...pluginResults
     })
   }
@@ -261,21 +277,16 @@ export function getWeeksInMonth<T = {}>(
 
 export function getMonthsInYear<T = {}>(
   year: number,
-  options: Options = {
-    includeWeeks: true,
-    includeDays: true,
-    includeHours: true,
-    includeMinutes: true,
-  },
-  plugins: Plugin[]
+  options: Options,
+  plugins?: Plugin[]
 ): Month<T>[] {
   const months: Month[] = []
   for (let i = 0; i < 12; i++) {
     let pluginResults = {}
     plugins?.forEach(plugin => {
-      if (plugin.views.includes(MatrixViews.month)) {
+      if (plugin.views.includes('month')) {
         pluginResults = {
-          ...plugin.fn(new Date(year, i)),
+          ...plugin.fn(new Date(year, i), plugin.args),
           ...pluginResults
         }
       }
@@ -284,8 +295,74 @@ export function getMonthsInYear<T = {}>(
       ...(options.includeWeeks) && { weeks: getWeeksInMonth(i, year, options, plugins) },
       month: i,
       year,
+      isCurrentMonth: i === new Date().getMonth(),
       ...pluginResults
     })
   }
   return months as Month<T>[]
+}
+
+export function getYears<T>(
+  year: number,
+  options: Options,
+  plugins?: Plugin[]
+): Year<T> {
+  let pluginResults = {}
+  plugins?.forEach(plugin => {
+    if (plugin.views.includes('year')) {
+      pluginResults = {
+        ...plugin.fn(new Date(year), plugin.args),
+        ...pluginResults
+      }
+    }
+  })
+
+  return {
+    ...(options.includeMonths) && { months: getMonthsInYear(year, options, plugins) },
+    year,
+    isCurrentYear: year === new Date().getFullYear(),
+    ...pluginResults
+  } as Year<T>
+}
+
+export function weeksInMonth(monthOrObjOrDate: number | Date | { month: number, year: number }, year?: number) {
+  let _month;
+  if (
+    typeof monthOrObjOrDate === 'object' && 
+    'year' in monthOrObjOrDate && 
+    'month' in monthOrObjOrDate
+  ) {
+    year = monthOrObjOrDate.year
+    _month = monthOrObjOrDate.month
+  } else if (
+    typeof monthOrObjOrDate === 'number' && year
+  ) {
+    _month = monthOrObjOrDate
+  } else {
+    _month = new Date(monthOrObjOrDate).getMonth()
+    year = new Date(monthOrObjOrDate).getFullYear()
+  }
+  
+  return getNumberOfWeeksInMonth(_month, year)
+}
+
+export function daysInMonth(monthOrObjOrDate: number | Date | { month: number, year: number }, year?: number) {
+  let _month;
+  if (
+    typeof monthOrObjOrDate === 'object' && 
+    'year' in monthOrObjOrDate && 
+    'month' in monthOrObjOrDate
+  ) {
+    year = monthOrObjOrDate.year
+    _month = monthOrObjOrDate.month
+  } else if (
+    typeof monthOrObjOrDate === 'number' && year
+  ) {
+    _month = monthOrObjOrDate
+  } else {
+    _month = new Date(monthOrObjOrDate).getMonth()
+    year = new Date(monthOrObjOrDate).getFullYear()
+  }
+  
+  return getNumberOfDaysInMonth(_month, year)
 }

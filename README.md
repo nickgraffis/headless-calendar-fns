@@ -13,6 +13,10 @@ An extendible, pure, function that returns a matrix of years, months, days, hour
 
 - 🔩 Plugin Interface
 - 🔑 Fully Typed
+- 📚 Well Documented
+- 🚀 Fast
+- 💾 Minimal
+- ✅ Tests Passing
 
 ## Installation
 
@@ -25,7 +29,11 @@ _or use npm or pnpm_
 
 ### CDN 
 ```html
-<script src="https://unpkg.com/headless-calendar-fns@latest/dist/headless-calendar-fns.js"></script>
+<script src="https://unpkg.com/headless-calendar-matrix@latest/dist/headless-calendar-matrix.min.js"></script>
+
+<script>
+  createMatrix({ view: 'year', year: 2020 });
+</script>
 ```
 
 ## Basic Useage

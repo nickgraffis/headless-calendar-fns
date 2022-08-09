@@ -119,6 +119,11 @@ let matrix = createCalendar({
 
 ## Performance
 
-Not sure what it is worth, but it generally takes about `8ms` to create a full calendar.
+Here are some very non scientific benchmarks for the performance of the calendar.
 
-And about `4MB` of heap memory to create a full calendar.
+* minute view -- **2.064ms**
+* hour view (showing min) -- **16.767ms**
+* day view (showing hour and min) -- **16.757ms**
+* week view (showing day and hour) -- **399.526ms**
+* month view (not showing hour and min) -- **10.916ms**
+* year view (not showing hour and min) -- **10.6ms**
