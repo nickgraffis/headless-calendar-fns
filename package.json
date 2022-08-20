@@ -1,6 +1,6 @@
 {
   "name": "headless-calendar-matrix",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "accesss": "public",
   "description": "Creates a matrix for a headless calendar.",
   "main": "dist/headless-calendar-matrix.js",
@@ -51,6 +51,7 @@
   "devDependencies": {
     "@rollup/plugin-typescript": "^8.3.3",
     "@vitest/ui": "^0.17.1",
+    "@yarnpkg/pnpify": "^4.0.0-rc.11",
     "esbuild": "^0.14.48",
     "rollup": "^2.6.1",
     "rollup-plugin-commonjs": "^9.1.4",
@@ -67,7 +68,6 @@
     "vite": "^2.9.14",
     "vitepress": "^1.0.0-alpha.4",
     "vitest": "^0.17.1",
-    "vue": "^3.2.37",
-    "@yarnpkg/pnpify": "^4.0.0-rc.11"
+    "vue": "^3.2.37"
   }
 }
