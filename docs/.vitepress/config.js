@@ -2,7 +2,7 @@ export default {
   title: 'Headless Calendar Fns',
   description: 'reates a matrix for a headless calendar.',
   themeConfig: {
-    logo: '/logo.svg',
+    logo: '/logo.png',
     siteTitle: 'Headless Calendar',
     nav: [
       { text: 'Author', link: '/author' },

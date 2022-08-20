@@ -1,7 +1,16 @@
 :root {
-  --vp-c-brand: #0ea5e9;
-  --vp-c-brand-dark: #0ea5e9;
-  --vp-c-brand-darker: #38bdf8;
-  --vp-c-brand-lighter: #0284c7;
-  --vp-c-brand-light: #0369a1;
+  --vp-c-brand: #8b5cf6;
+  --vp-c-brand-dark: #7c3aed;
+  --vp-c-brand-darker: #6d28d9;
+  --vp-c-brand-lighter: #c4b5fd;
+  --vp-c-brand-light: #a78bfa;
+}
+
+.clip {
+  color: white !important;
+}
+
+.text {
+  font-size: 2.5rem !important;
+  line-height: 1 !important;
 }

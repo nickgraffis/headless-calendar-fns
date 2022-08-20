@@ -46,7 +46,7 @@ function getDaysInWeek(weekIndex, month, year, options, plugins) {
     plugins == null ? void 0 : plugins.forEach((plugin) => {
       if (plugin.views.includes("day")) {
         pluginResults = {
-          ...plugin.fn(date),
+          ...plugin.fn(date, plugin.args),
           ...pluginResults
         };
       }
@@ -86,7 +86,7 @@ function getMinutesInHour(hour, date, options, plugins) {
     plugins == null ? void 0 : plugins.forEach((plugin) => {
       if (plugin.views.includes("minute")) {
         pluginResults = {
-          ...plugin.fn(_date),
+          ...plugin.fn(_date, plugin.args),
           ...pluginResults
         };
       }
@@ -125,7 +125,7 @@ function getHoursinDay(date, options = {
     plugins == null ? void 0 : plugins.forEach((plugin) => {
       if (plugin.views.includes("hour")) {
         pluginResults = {
-          ...plugin.fn(new Date(date.getFullYear(), date.getMonth(), date.getDate(), i)),
+          ...plugin.fn(new Date(date.getFullYear(), date.getMonth(), date.getDate(), i), plugin.args),
           ...pluginResults
         };
       }
@@ -168,7 +168,7 @@ function getWeeksInMonth(month, year, options = {
     plugins == null ? void 0 : plugins.forEach((plugin) => {
       if (plugin.views.includes("week")) {
         pluginResults = {
-          ...plugin.fn(new Date(year, month), i),
+          ...plugin.fn(new Date(year, month), plugin.args, i),
           ...pluginResults
         };
       }
@@ -191,7 +191,7 @@ function getMonthsInYear(year, options, plugins) {
     plugins == null ? void 0 : plugins.forEach((plugin) => {
       if (plugin.views.includes("month")) {
         pluginResults = {
-          ...plugin.fn(new Date(year, i)),
+          ...plugin.fn(new Date(year, i), plugin.args),
           ...pluginResults
         };
       }
@@ -211,7 +211,7 @@ function getYears(year, options, plugins) {
   plugins == null ? void 0 : plugins.forEach((plugin) => {
     if (plugin.views.includes("year")) {
       pluginResults = {
-        ...plugin.fn(new Date(year)),
+        ...plugin.fn(new Date(year), plugin.args),
         ...pluginResults
       };
     }
@@ -224,12 +224,19 @@ function getYears(year, options, plugins) {
   };
 }
 function createMatrix(options) {
+  var _a;
   const { view, year, month, week, day, hour, plugins } = options;
   options.includeMonths = options.includeMonths || true;
   options.includeWeeks = options.includeWeeks || true;
   options.includeDays = options.includeDays || true;
   options.includeHours = options.includeHours || false;
   options.includeMinutes = options.includeMinutes || false;
+  if ((_a = options == null ? void 0 : options.plugins) == null ? void 0 : _a.some((plugin) => plugin == null ? void 0 : plugin.load)) {
+    for (const plugin of options.plugins) {
+      if (plugin.load)
+        ;
+    }
+  }
   switch (view) {
     case "year":
       return {

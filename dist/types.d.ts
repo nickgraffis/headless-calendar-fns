@@ -1,10 +1,13 @@
 import Timezone from "./timezones";
 export declare type Plugin = {
+    args?: any;
     name: string;
     version: string;
     views: MatrixViews[];
-    fn: (date: Date, week?: number) => any;
+    fn: (date: Date, args?: any, week?: number) => any;
+    load?: (args?: any) => Promise<any>;
 };
+export declare type PluginArg = (args: any) => Plugin;
 export declare type Options = {
     includeMonths?: boolean;
     includeWeeks?: boolean;
@@ -36,6 +39,12 @@ export declare type Matrix<T = {}> = {
     days?: Day<T>[];
     hours?: Hour<T>[];
     minutes?: Minute<T>[];
+    currentDay?: number;
+    currentMonth?: number;
+    currentYear?: number;
+    currentHour?: number;
+    currentMinute?: number;
+    currentWeek?: number;
 };
 export declare type Calendar<T = {}> = {
     view: MatrixViews;

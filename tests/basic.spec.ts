@@ -15,10 +15,11 @@ test('Create a year view', () => {
 test('Create a month view', () => {
   let matrix = createMatrix({
     view: 'month',
-    year: new Date().getFullYear() - 1,
+    year: new Date().getFullYear(),
     month: new Date().getMonth(),
   })
 
+  console.group(matrix.current.months?.[7]?.weeks?.[2])
   expect(matrix.current.months?.length).toBe(12)
   expect(matrix.current.months?.[0].weeks).toBeDefined()
   expect(matrix.current.months?.[0].weeks?.length).toBe(6)
