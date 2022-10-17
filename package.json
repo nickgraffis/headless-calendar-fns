@@ -17,9 +17,6 @@
     },
     "./dist/*": "./dist/*"
   },
-  "workspaces": [
-    "packages/*"
-  ],
   "files": [
     "dist/**/*.js",
     "dist/**/*.mjs",
@@ -69,5 +66,8 @@
     "vitepress": "^1.0.0-alpha.4",
     "vitest": "^0.17.1",
     "vue": "^3.2.37"
+  },
+  "dependencies": {
+    "@js-temporal/polyfill": "^0.4.2"
   }
 }

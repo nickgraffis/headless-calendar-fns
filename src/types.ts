@@ -1,15 +1,16 @@
 import Timezone from "./timezones"
 
-export type Plugin = {
-  args?: any,
+export type Plugin<PluginArgs extends {} = any, PluginResponse extends {} = any, PluginLoadResponse extends {} = any> = {
+  args?: PluginArgs,
   name: string
   version: string
   views: MatrixViews[]
-  fn: (date: Date, args?: any, week?: number) => any,
-  load?: (args?: any) => Promise<any>
+  fn: (date: Date, args?: any, week?: number) => PluginResponse,
+  load?: (args?: PluginArgs) => Promise<PluginLoadResponse>
 }
 
-export type PluginArg = (args: any) => Plugin
+// Is this in use?
+// export type PluginArg = (args: any) => Plugin
 
 export type Options = {
   includeMonths?: boolean
@@ -23,6 +24,10 @@ export type Options = {
   daysInWeek?: number | 'weekends' | 'weekdays'
   startOfWeek?: number
   daysOfWeek?: string[] | 'long' | 'short' | 'narrow' | boolean
+  dateRange?: {
+    start: Date,
+    end: Date
+  }
   format?: {
     locales?: string, // default: 'en-US'
     day?: 'numeric' | '2-digit',
@@ -34,7 +39,14 @@ export type Options = {
   },
 }
 
-export type MatrixViews = 'year' | 'month' | 'week' | 'day' | 'hour' | 'minute'
+export enum MatrixViews {
+  'year',
+  'month',
+  'week',
+  'day',
+  'hour',
+  'minute'
+}
 
 export type Matrix<T = {}> = {
   view: MatrixViews

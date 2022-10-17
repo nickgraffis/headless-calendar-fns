@@ -19,7 +19,7 @@ test('Create a month view', () => {
     month: new Date().getMonth(),
   })
 
-  console.group(matrix.current.months?.[7]?.weeks?.[2])
+  console.group(JSON.stringify(matrix.current.months?.[7]?.weeks, null, 2))
   expect(matrix.current.months?.length).toBe(12)
   expect(matrix.current.months?.[0].weeks).toBeDefined()
   expect(matrix.current.months?.[0].weeks?.length).toBe(6)

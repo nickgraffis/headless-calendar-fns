@@ -1,368 +1,398 @@
-import type { Plugin, Day, Hour, Minute, Month, Week, Options, Year } from "./types"
+import type { Plugin, Day, Hour, Minute, Month, Week, Options } from "./types"
+import { getNumberOfWeeksInMonth, getCurrentWeek, getDateCellByIndex, getMonth, getFullYear, getDay, getHours, getDate, getMinutes } from "./date-utils";
+import { MatrixViews } from "./types";
+import Timezone from "./timezones";
+import { returnsPromise } from "./promise-utils";
 
-// ✅ Promise check
-export function isPromise(p: any) {
-  if (typeof p === 'object' && typeof p.then === 'function') {
-    return true;
+export class Calendar<T> {
+  private _options: Options & {
+    view: MatrixViews,
+    year: number,
+    month?: number,
+    week?: number,
+    day?: number,
+    hour?: number,
+		plugins?: Plugin[]
+  };
+  private _plugins: Plugin[];
+  private pluginLoadResponse: any = {}
+  private today: Date;
+
+  constructor(options: Options & {
+    view: MatrixViews,
+    year: number,
+    month?: number,
+    week?: number,
+    day?: number,
+    hour?: number,
+		plugins?: Plugin[]
+  }) {
+    this._options = options
+    this._plugins = options.plugins || []
+    this.today = new Date()
   }
 
-  return false;
-}
-
-// ✅ Check if return value is promise
-export function returnsPromise(f: Function) {
-  if (
-    f.constructor.name === 'AsyncFunction' ||
-    (typeof f === 'function' && isPromise(f()))
-  ) {
-    //console.log('✅ Function returns promise');
-    return true;
+  get options() {
+    return this._options
   }
 
-  // console.log('⛔️ Function does NOT return promise');
-  return false;
-}
+  get plugins() {
+    return this._plugins
+  }
 
-
-export function getNumberOfWeeksInMonth(
-  month: number, 
-  year: number
-): number {
-  const date = new Date(year, month, 1)
-  const day = date.getDay()
-  const lastDay = new Date(year, month + 1, 0).getDate()
-  return Math.ceil((lastDay + day) / 7)
-}
-
-export function getNumberOfDaysInMonth(
-  month: number,
-  year: number
-): number {
-  const lastDay = new Date(year, month + 1, 0).getDate()
-  return lastDay
-}
-
-export function getDateCellByIndex(
-  weekIndex: number, 
-  dayIndex: number, 
-  month: number, 
-  year: number
-): Date {
-  const date = new Date(year, month, 1)
-  const day = date.getDay()
-  const firstDayIndex = day === 0 ? 6 : day - 1
-  const index = weekIndex * 7 + dayIndex
-  const dateIndex = index - firstDayIndex
-  const dateCell = new Date(year, month, dateIndex)
-  return dateCell
-}
-
-export function getDaysInWeek<T = {}>(
-  weekIndex: number,
-  month: number,
-  year: number,
-  options: Options,
-  plugins?: Plugin[]
-): Day<T>[] {
-  const days: Day[] = []
-  let daysInWeek = 7
-  let startOfWeek = 0
-  let inc = 1
-  if (options?.daysInWeek) {
-    if (typeof options.daysInWeek === 'number') {
-      daysInWeek = options.daysInWeek + 1
-    } else if (typeof options.daysInWeek === 'string') {
-      if (options.daysInWeek === 'weekends') {
-        daysInWeek = 7
-        startOfWeek = 0
-        inc = 6
+  getCalendar() {
+    const preLoadPlugins = this.plugins?.filter(plugin => plugin.load)
+    if (preLoadPlugins?.length) {
+      const preLoadPluginsReturningAPromise = preLoadPlugins.filter(plugin => plugin.load && returnsPromise(plugin.load))
+      const preLoadPluginsNotReturningAPromise = preLoadPlugins.filter(plugin => plugin.load && !returnsPromise(plugin.load))
+      if (preLoadPluginsReturningAPromise.length) {
+        const promises = preLoadPluginsReturningAPromise.map(plugin => plugin.load && plugin.load(this.options))
+        Promise.all(promises).then((values) => {
+          values.forEach((value, index) => {
+            this.pluginLoadResponse[preLoadPluginsReturningAPromise[index].name] = value
+          })
+          preLoadPluginsNotReturningAPromise.forEach(plugin => {
+            this.pluginLoadResponse[plugin.name] = plugin.load && plugin.load(this.options)
+          })
+          return this.getCalendarView()
+        })
       } else {
-        daysInWeek = 6
-        startOfWeek = 1
+        preLoadPluginsNotReturningAPromise.forEach(plugin => {
+          this.pluginLoadResponse[plugin.name] = plugin.load && plugin.load(this.options)
+        })
+        return this.getCalendarView()
       }
+    } 
+
+    return this.getCalendarView()
+  }
+
+  getCalendarView() {
+    switch(this.options?.view) {
+      case MatrixViews.year:
+        return this.getYear(this.options.year)
+      case MatrixViews.month:
+        if (!this.options.month) {
+          throw new Error('Month is required for month view')
+        }
+        return this.getWeeksInMonth(this.options.month, this.options.year)
+      case MatrixViews.week:
+        if (!this.options.week) {
+          throw new Error('Week is required for week view')
+        } else if (!this.options.month) {
+          throw new Error('Month is required for week view')
+        }
+        return this.getDaysInWeek(this.options.week, this.options.month, this.options.year)
+      case MatrixViews.day:
+        if (!this.options.month) {
+          throw new Error('Month is required for day view')
+        }
+        return this.getHoursinDay(new Date(this.options.year, this.options.month, this.options.day))
+      case MatrixViews.hour:
+        if (!this.options.month) {
+          throw new Error('Month is required for hour view')
+        } else if (!this.options.hour) {
+          throw new Error('Day is required for hour view')
+        }
+        return this.getMinutesInHour(this.options.hour, new Date(this.options.year, this.options.month, this.options.day))
+      default:
+        throw new Error('Invalid view, must be one of: year, month, week, day, hour')
     }
   }
-  if (options?.startOfWeek) {
-    if (options?.daysInWeek === 'weekends' || options?.daysInWeek === 'weekdays') {
-      console.warn('setting startOfWeek with daysInWeek: weekends or weekdays can have wild results!')
+
+  getMonth(date: Date) {
+    return getMonth(
+      date, 
+      { 
+        timeZone: this.options.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone,
+        locale: this.options.format?.locales || Intl.DateTimeFormat().resolvedOptions().locale as string
+      }
+    )
+  }
+
+  getFullYear(date: Date) {
+    return getFullYear(
+      date,
+      {
+        timeZone: this.options.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone,
+        locale: this.options.format?.locales || Intl.DateTimeFormat().resolvedOptions().locale as string
+      }
+    )
+  } 
+
+  getDay(date: Date) {
+    return getDay(
+      date,
+      {
+        timeZone: this.options.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone,
+        locale: this.options.format?.locales || Intl.DateTimeFormat().resolvedOptions().locale as string
+      }
+    )
+  }
+
+  getHours(date: Date) {
+    return getHours(
+      date,
+      {
+        timeZone: this.options.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone,
+        locale: this.options.format?.locales || Intl.DateTimeFormat().resolvedOptions().locale as string
+      }
+    )
+  }
+
+  getDate(date: Date) {
+    return getDate(
+      date,
+      {
+        timeZone: this.options.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone,
+        locale: this.options.format?.locales || Intl.DateTimeFormat().resolvedOptions().locale as string
+      }
+    )
+  }
+
+  getMinutes(date: Date) {
+    return getMinutes(
+      date,
+      {
+        timeZone: this.options.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone,
+        locale: this.options.format?.locales || Intl.DateTimeFormat().resolvedOptions().locale as string
+      }
+    )
+  }
+
+  isCurrentMonth(month: number, year: number) {
+    return this.getMonth(this.today) === month && this.getFullYear(this.today) === year
+  }
+
+  isToday(day: number, month: number, year: number) {
+    return this.getDay(this.today) === day && this.getMonth(this.today) === month && this.getFullYear(this.today) === year
+  }
+
+  getYear(year: number) {
+    const months = this.getMonths(year)
+    return {
+      year,
+      months,
+      isCurrentYear: this.getFullYear(this.today) === year
+    }
+  }
+
+  getMonths(year: number) {
+    const months: Month[] = []
+    for (let i = 0; i < 12; i++) {
+      let pluginResults = {}
+      this.plugins?.forEach(plugin => {
+        if (plugin.views.includes(MatrixViews.year)) {
+          pluginResults = {
+            // IMPORTANT: plugin.fn passes in the date as UTC!
+            ...plugin.fn(new Date(new Date(year, i)), {
+              ...plugin.args,
+              ...this.pluginLoadResponse?.[plugin.name] || {}
+            }),
+            ...pluginResults
+          }
+        }
+      })
+      months.push({
+        ...(this.options.includeWeeks) && { weeks: this.getWeeksInMonth(i, year) },
+        month: i,
+        year,
+        isCurrentMonth: this.isCurrentMonth(i, year),
+        ...pluginResults
+      })
+    }
+    return months as Month<T>[]
+  }
+
+  getWeeksInMonth(month: number, year: number) {
+    const weeks: Week[] = []
+    const numberOfWeeks = getNumberOfWeeksInMonth(month, year)
+    for (let i = 0; i < numberOfWeeks; i++) {
+      let pluginResults = {}
+      this.plugins?.forEach(plugin => {
+        if (plugin.views.includes(MatrixViews.week)) {
+          pluginResults = {
+            // IMPORTANT: plugin.fn passes in the date as UTC!
+            ...plugin.fn(new Date(year, month), {
+              ...plugin.args,
+              ...this.pluginLoadResponse?.[plugin.name] || {}
+            }, i),
+            ...pluginResults
+          }
+        }
+      })
+      weeks.push({
+        ...(this.options.includeDays) && { days: this.getDaysInWeek(i, month, year) },
+        week: i,
+        year,
+        month,
+        isCurrentWeek: i === getCurrentWeek({ month, year, timezone: this.options.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone }),
+        ...pluginResults
+      })
+    }
+    return weeks as Week<T>[]
+  }
+
+  getDaysInWeek(weekIndex: number, month: number, year: number) {
+    const days: Day[] = []
+    let daysInWeek = 7
+    let startOfWeek = 0
+    let inc = 1
+    if (this.options?.daysInWeek) {
+      if (typeof this.options.daysInWeek === 'number') {
+        daysInWeek = this.options.daysInWeek + 1
+      } else if (typeof this.options.daysInWeek === 'string') {
+        if (this.options.daysInWeek === 'weekends') {
+          daysInWeek = 7
+          startOfWeek = 0
+          inc = 6
+        } else {
+          daysInWeek = 6
+          startOfWeek = 1
+        }
+      }
+    }
+    if (this.options?.startOfWeek) {
+      if (this.options?.daysInWeek === 'weekends' || this.options?.daysInWeek === 'weekdays') {
+        console.warn('setting startOfWeek with daysInWeek: weekends or weekdays can have wild results!')
+      }
+
+      startOfWeek = this.options.startOfWeek
+    }
+    for (let j = startOfWeek; j < daysInWeek; j = j + inc) {
+      const date = getDateCellByIndex(weekIndex, j, month, year)
+      let pluginResults = {}
+      this.plugins?.forEach(plugin => {
+        if (plugin.views.includes(MatrixViews.day)) {
+          pluginResults = {
+            // IMPORTANT: plugin.fn passes in the date as UTC!
+            ...plugin.fn(date, {
+              ...plugin.args,
+              ...this.pluginLoadResponse[plugin.name]
+            }),
+            ...pluginResults
+          }
+        }
+      })
+
+      let day: string | number = this.getDay(date)
+      if (this.options?.daysOfWeek) {
+        if (Array.isArray(this.options.daysOfWeek)) {
+          day = this.options.daysOfWeek[this.getDay(date)]
+        } else if (typeof this.options.daysOfWeek === 'string' && ['long', 'short', 'narrow'].includes(this.options.daysOfWeek)) {
+          day = date.toLocaleDateString(this.options.format?.locales || 'en-us', { weekday: this.options.daysOfWeek, timeZone: this.options.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone })
+        }
+      } else if (!this.options.daysOfWeek) day = this.getDay(date)
+      else day = this.getDay(date)
+      
+      days.push({
+        ...(this.options?.includeHours) && { hours: this.getHoursinDay(date) },
+        date: new Date(date).toLocaleString(
+            this.options?.format?.locales || 
+            'en-US', { 
+              ...this.options?.format || {},
+              timeZone: this.options?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone
+            }
+          ),
+        isToday: this.isToday(this.getDay(date), this.getMonth(date), this.getFullYear(date)),
+        isWeekend: this.getDay(date) === 0 || this.getDay(date) === 6,
+        day,
+        week: weekIndex,
+        month,
+        year,
+        ...pluginResults
+      })
     }
 
-    startOfWeek = options.startOfWeek
-  }
-  let today = (options?.timeZone ? new Date(new Date().toLocaleString("en-US", { timeZone: options.timeZone })) : new Date())
-  for (let j = startOfWeek; j < daysInWeek; j = j + inc) {
-    const date = getDateCellByIndex(weekIndex, j, month, year)
-    let pluginResults = {}
-    plugins?.forEach(plugin => {
-      if (plugin.views.includes('day')) {
-        pluginResults = {
-          ...plugin.fn(date, plugin.args),
-          ...pluginResults
-        }
-      }
-    })
-
-    let day: string | number = date.getDay();
-    if (options?.daysOfWeek) {
-      if (Array.isArray(options.daysOfWeek)) {
-        day = options.daysOfWeek[date.getDay()]
-      } else if (typeof options.daysOfWeek === 'string' && ['long', 'short', 'narrow'].includes(options.daysOfWeek)) {
-        day = date.toLocaleDateString('en-US', { weekday: options.daysOfWeek })
-      }
-    } else if (!options.daysOfWeek) day = date.getDay()
-    else day = date.getDay()
-    
-    days.push({
-      ...(options?.includeHours) && { hours: getHoursinDay(date, options, plugins) },
-      date: 
-        options?.format ? 
-          new Date(date).toLocaleString(
-            options?.format?.locales || 
-            'en-US', { ...options?.format }
-          ) : 
-          date.toISOString().split('T')[0],
-      isToday: 
-        date.getDate() === today.getDate() && 
-        date.getMonth() === today.getMonth() && 
-        date.getFullYear() === today.getFullYear(),
-      isWeekend: date.getDay() === 0 || date.getDay() === 6,
-      day,
-      week: weekIndex,
-      month,
-      year,
-      ...pluginResults
-    })
+    return days as Day<T>[]
   }
 
-  return days as Day<T>[]
-}
+  getHoursinDay(date: Date) {
+    let hours: Hour[] = []
+    let startOfDay = 0
+    let hoursInDay = 24
 
-export function getMinutesInHour<T = {}>(
-  hour: number,
-  date: Date,
-  options: Options,
-  plugins?: Plugin[]
-): Minute<T>[] {
-  const minutes: Minute[] = []
-  for (let i = 0; i < 60; i++) {
-    const _date = new Date(date.getTime())
-    _date.setHours(hour, i)
-    let pluginResults = {}
-    plugins?.forEach(plugin => {
-      if (plugin.views.includes('minute')) {
-        pluginResults = {
-          ...plugin.fn(_date, plugin.args),
-          ...pluginResults
-        }
-      }
-    })
-    minutes.push({
-      date: options?.format ? 
-        new Date(_date).toLocaleString(
-          options?.format?.locales || 
-          'en-US', { ...options?.format }
-        ) : 
-        date.toISOString().split('T')[0],
-      minute: i,
-      hour,
-      day: _date.getDate(),
-      month: _date.getMonth(),
-      year: _date.getFullYear(),
-      isCurrentMinute: _date.getMinutes() === new Date().getMinutes(),
-      ...pluginResults
-    })
-  }
-  return minutes as Minute<T>[]
-}
-
-export function getHoursinDay<T = {}>(
-  date: Date,
-  options: Options = {
-    includeWeeks: true,
-    includeDays: true,
-    includeHours: true,
-    includeMinutes: true
-  },
-  plugins?: Plugin[]
-): Hour<T>[] {
-  let hours: Hour[] = []
-  let startOfDay = 0
-  let hoursInDay = 24
-
-  if (options?.startOfDay) {
-    startOfDay = options.startOfDay
-  }
-
-  if (options?.hoursInDay) {
-    hoursInDay = startOfDay + options.hoursInDay + 1
-  }
-
-  for (let i = startOfDay; i < hoursInDay; i++) {
-    let pluginResults = {}
-    plugins?.forEach(plugin => {
-      if (plugin.views.includes('hour')) {
-        pluginResults = {
-          ...plugin.fn(new Date(date.getFullYear(), date.getMonth(), date.getDate(), i), plugin.args),
-          ...pluginResults
-        }
-      }
-    })
-    let _date = options?.timeZone ? new Date(new Date().toLocaleString("en-US", { timeZone: options.timeZone })) : new Date()
-    let isCurrentHour = i === _date.getHours()
-    let hour = {
-      date: options?.format ? 
-        new Date(date).toLocaleString(
-          options?.format?.locales || 
-          'en-US', { ...options?.format }
-        ) : 
-        date.toISOString().split('T')[0],
-      ...(options?.includeMinutes) && { minutes: getMinutesInHour(i, date, options, plugins) },
-      hour: i,
-      day: date.getDate(),
-      month: date.getMonth(),
-      year: date.getFullYear(),
-      isCurrentHour,
-      ...pluginResults
+    if (this.options?.startOfDay) {
+      startOfDay = this.options.startOfDay
     }
-    hours.push(hour)
-  }
 
-  return hours as Hour<T>[]
-}
+    if (this.options?.hoursInDay) {
+      hoursInDay = startOfDay + this.options.hoursInDay + 1
+    }
 
-export function getCurrentWeek(month: number, year: number) {
-  const date = new Date()
-  const day = date.getDate()
-  const firstDayOfMonth = new Date(year, month, 1)
-  const firstDayOfWeek = firstDayOfMonth.getDay()
-  const firstDayOfWeekInMonth = day - firstDayOfWeek
-  const week = Math.ceil(firstDayOfWeekInMonth / 7)
-  return week
-}
-
-export function getWeeksInMonth<T = {}>(
-  month: number, 
-  year: number,
-  options: Options = {
-    includeWeeks: true,
-    includeDays: true,
-    includeHours: true,
-    includeMinutes: true
-  },
-  plugins?: Plugin[]
-): Week<T>[] {
-  const weeks: Week[] = []
-  const numberOfWeeks = getNumberOfWeeksInMonth(month, year)
-  for (let i = 0; i < numberOfWeeks; i++) {
-    let pluginResults = {}
-    plugins?.forEach(plugin => {
-      if (plugin.views.includes('week')) {
-        pluginResults = {
-          ...plugin.fn(new Date(year, month), plugin.args, i),
-          ...pluginResults
+    for (let i = startOfDay; i < hoursInDay; i++) {
+      let pluginResults = {}
+      this.plugins?.forEach(plugin => {
+        if (plugin.views.includes(MatrixViews.hour)) {
+          pluginResults = {
+            // IMPORTANT: plugin.fn passes in the date as UTC!
+            ...plugin.fn(new Date(date.getFullYear(), date.getMonth(), date.getDate(), i), {
+              ...plugin.args,
+              ...this.pluginLoadResponse?.[plugin.name] || {}
+            }),
+            ...pluginResults
+          }
         }
-      }
-    })
-    weeks.push({
-      ...(options.includeDays) && { days: getDaysInWeek(i, month, year, options, plugins) },
-      week: i,
-      year,
-      month,
-      isCurrentWeek: i === getCurrentWeek(month, year),
-      ...pluginResults
-    })
-  }
-  return weeks as Week<T>[]
-}
-
-export function getMonthsInYear<T = {}>(
-  year: number,
-  options: Options,
-  plugins?: Plugin[]
-): Month<T>[] {
-  const months: Month[] = []
-  for (let i = 0; i < 12; i++) {
-    let pluginResults = {}
-    plugins?.forEach(plugin => {
-      if (plugin.views.includes('month')) {
-        pluginResults = {
-          ...plugin.fn(new Date(year, i), plugin.args),
-          ...pluginResults
-        }
-      }
-    })
-    months.push({
-      ...(options.includeWeeks) && { weeks: getWeeksInMonth(i, year, options, plugins) },
-      month: i,
-      year,
-      isCurrentMonth: i === new Date().getMonth(),
-      ...pluginResults
-    })
-  }
-  return months as Month<T>[]
-}
-
-export function getYears<T>(
-  year: number,
-  options: Options,
-  plugins?: Plugin[]
-): Year<T> {
-  let pluginResults = {}
-  plugins?.forEach(plugin => {
-    if (plugin.views.includes('year')) {
-      pluginResults = {
-        ...plugin.fn(new Date(year), plugin.args),
+      })
+      let _date = new Date(new Date().toLocaleString(this.options?.format?.locales || 'en-us', { timeZone: this.options.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone }))
+      let isCurrentHour = i === this.getHours(_date)
+      let hour = {
+        date: new Date(date).toLocaleString(
+            this.options?.format?.locales || 
+            'en-US', { 
+              ...this.options?.format || {},
+              timeZone: this.options?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone
+            }
+          ),
+        ...(this.options?.includeMinutes) && { minutes: this.getMinutesInHour(i, date) },
+        hour: i,
+        day: this.getDate(date),
+        month: this.getMonth(date),
+        year: this.getFullYear(date),
+        isCurrentHour,
         ...pluginResults
       }
+      hours.push(hour)
     }
-  })
 
-  return {
-    ...(options.includeMonths) && { months: getMonthsInYear(year, options, plugins) },
-    year,
-    isCurrentYear: year === new Date().getFullYear(),
-    ...pluginResults
-  } as Year<T>
-}
-
-export function weeksInMonth(monthOrObjOrDate: number | Date | { month: number, year: number }, year?: number) {
-  let _month;
-  if (
-    typeof monthOrObjOrDate === 'object' && 
-    'year' in monthOrObjOrDate && 
-    'month' in monthOrObjOrDate
-  ) {
-    year = monthOrObjOrDate.year
-    _month = monthOrObjOrDate.month
-  } else if (
-    typeof monthOrObjOrDate === 'number' && year
-  ) {
-    _month = monthOrObjOrDate
-  } else {
-    _month = new Date(monthOrObjOrDate).getMonth()
-    year = new Date(monthOrObjOrDate).getFullYear()
+    return hours as Hour<T>[]
   }
-  
-  return getNumberOfWeeksInMonth(_month, year)
-}
 
-export function daysInMonth(monthOrObjOrDate: number | Date | { month: number, year: number }, year?: number) {
-  let _month;
-  if (
-    typeof monthOrObjOrDate === 'object' && 
-    'year' in monthOrObjOrDate && 
-    'month' in monthOrObjOrDate
-  ) {
-    year = monthOrObjOrDate.year
-    _month = monthOrObjOrDate.month
-  } else if (
-    typeof monthOrObjOrDate === 'number' && year
-  ) {
-    _month = monthOrObjOrDate
-  } else {
-    _month = new Date(monthOrObjOrDate).getMonth()
-    year = new Date(monthOrObjOrDate).getFullYear()
+  getMinutesInHour(hour: number, date: Date) {
+    const minutes: Minute[] = []
+    for (let i = 0; i < 60; i++) {
+      const _date = new Date(date.getTime())
+      _date.setHours(hour, i)
+      let pluginResults = {}
+      this.plugins?.forEach(plugin => {
+        if (plugin.views.includes(MatrixViews.minute)) {
+          pluginResults = {
+            // IMPORTANT: plugin.fn passes in the date as UTC!
+            ...plugin.fn(_date, {
+              ...plugin.args,
+              ...this.pluginLoadResponse?.[plugin.name] || {}
+            }),
+            ...pluginResults
+          }
+        }
+      })
+      minutes.push({
+        date: new Date(_date).toLocaleString(
+            this.options?.format?.locales || 
+            'en-US', { 
+              ...this.options?.format || {},
+              timeZone: this.options?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone
+           }
+          ),
+        minute: i,
+        hour,
+        day: this.getDate(_date),
+        month: this.getMonth(_date),
+        year: this.getFullYear(_date),
+        isCurrentMinute: this.getMinutes(_date) === this.getMinutes(this.today),
+        ...pluginResults
+      })
+    }
+    return minutes as Minute<T>[]
   }
-  
-  return getNumberOfDaysInMonth(_month, year)
 }
