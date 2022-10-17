@@ -152,3 +152,39 @@ export default function createMatrix<T = {}>(
         throw new Error('Invalid view, must be one of: year, month, week, day, hour')
     }
 }
+
+import { Calendar as CalendarConstructor } from "./dates";
+import { MatrixViews } from "./types";
+import type { Calendar, Plugin, Options } from "./types";
+
+export default function createMatrix<T = {}>(
+  options: Options & {
+    view: MatrixViews,
+    year: number,
+    month?: number,
+    week?: number,
+    day?: number,
+    hour?: number,
+		plugins?: Plugin[]
+  }
+): Calendar<T> {
+
+  options.includeMonths = options.includeMonths || true
+  options.includeWeeks = options.includeWeeks || true
+  options.includeDays = options.includeDays || true
+  options.includeHours = options.includeHours || false
+  options.includeMinutes = options.includeMinutes || false
+
+  const calendar = new CalendarConstructor<T>(options)
+  const nextCalendar = new CalendarConstructor<T>(createOptionsForNextView(options))
+  const prevCalendar = new CalendarConstructor<T>(createOptionsForPrevView(options))
+
+  const matrix: Calendar<T> = {
+    view: options.view,
+    prev: {
+      view: options.view,
+      matrix: prevCalendar.getCalendar()
+    },
+    next: nextCalendar.getCalendar(),
+  }
+}

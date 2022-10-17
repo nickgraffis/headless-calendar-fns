@@ -117,26 +117,41 @@ export function createMatrixOutputForView<T>(
     hour?: number,
     plugins?: Plugin[]
   }, 
-  currentCalendar: Month<T>[] | Week<T>[] | Day<T>[] | Hour<T>[] | Minute<T>[], 
-  prevCalendar: Month<T>[] | Week<T>[] | Day<T>[] | Hour<T>[] | Minute<T>[],
-  nextCalendar: Month<T>[] | Week<T>[] | Day<T>[] | Hour<T>[] | Minute<T>[]
-): Matrix<T> {
+  currentCalendar: Month<T>[] | Week<T>[] | Day<T>[] | Hour<T>[] | Minute<T>[] | Year<T>, 
+  prevCalendar: Month<T>[] | Week<T>[] | Day<T>[] | Hour<T>[] | Minute<T>[] | Year<T>,
+  nextCalendar: Month<T>[] | Week<T>[] | Day<T>[] | Hour<T>[] | Minute<T>[] | Year<T>
+): Calendar<T> {
   switch (options.view) {
     case MatrixViews.year:
       return {
         view: options.view,
-        year: {
-          months: currentCalendar as Month<T>[],
-          year: options.year,
-          isCurrentYear: true,
-        } as unknown as Year<T>,
+        current: {
+          view: options.view,
+          year: currentCalendar as Year<T>,
+        },
         prev: {
           view: options.view,
-          years: prevCalendar,
+          year: prevCalendar as Year<T>,
         },
         next: {
           view: options.view,
-          years: nextCalendar,
+          year: nextCalendar as Year<T>,
+        },
+      }
+    case MatrixViews.month:
+      return {
+        view: options.view,
+        current: {
+          view: options.view,
+          months: currentCalendar as Month<T>[],
+        },
+        prev: {
+          view: options.view,
+          months: prevCalendar as Month<T>[],
+        },
+        next: {
+          view: options.view,
+          months: prevCalendar as Month<T>[],
         },
       }
     default:
