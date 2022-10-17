@@ -6,7 +6,7 @@ export type Plugin<PluginArgs extends {} = any, PluginResponse extends {} = any,
   version: string
   views: MatrixViews[]
   fn: (date: Date, args?: any, week?: number) => PluginResponse,
-  load?: (args?: PluginArgs) => Promise<PluginLoadResponse>
+  load?: (args?: PluginArgs) => Promise<PluginLoadResponse> | PluginResponse
 }
 
 // Is this in use?
@@ -33,7 +33,7 @@ export type Options = {
     day?: 'numeric' | '2-digit',
     month?: 'numeric' | '2-digit' | 'long' | 'short' | 'narrow',
     year?: 'numeric' | '2-digit',
-    weekday?: 'long' | 'short' | 'narrow',
+    weekday?: 'long' | 'short' | 'narrow' | 'numeric',
     hour?: 'numeric' | '2-digit',
     minute?: 'numeric' | '2-digit',
   },
@@ -48,7 +48,7 @@ export enum MatrixViews {
   'minute'
 }
 
-export type Matrix<T = {}> = {
+export type Matrix<T extends {} = any> = {
   view: MatrixViews
   year?: Year<T>
   months?: Month<T>[]
@@ -64,14 +64,14 @@ export type Matrix<T = {}> = {
   currentWeek?: number
 }
 
-export type Calendar<T = {}> = {
+export type Calendar<T extends {} = any> = {
   view: MatrixViews,
   prev: Matrix<T>,
   current: Matrix<T>,
   next: Matrix<T>
 }
 
-export type Minute<T = {}> = {
+export type Minute<T extends {} = any> = {
 	date: string
 	minute: number
 	hour: number
@@ -81,7 +81,7 @@ export type Minute<T = {}> = {
 	isCurrentMinute: boolean
 } & T
 
-export type Hour<T = {}> = {
+export type Hour<T extends {} = any> = {
 	date: string
 	minutes?: Minute[]
 	hour: number
@@ -91,7 +91,7 @@ export type Hour<T = {}> = {
 	isCurrentHour: boolean
 } & T
 
-export type Day<T = {}> = {
+export type Day<T extends {} = any> = {
 	hours?: Hour[]
   date: string
   isToday: boolean
@@ -102,7 +102,7 @@ export type Day<T = {}> = {
   day: string | number
 } & T
 
-export type Week<T = {}> = {
+export type Week<T extends {} = any> = {
 	days?: Day[]
 	week: number
 	month: number
@@ -110,14 +110,14 @@ export type Week<T = {}> = {
   isCurrentWeek: boolean
 } & T
 
-export type Month<T = {}> = {
+export type Month<T extends {} = any> = {
 	weeks?: Week[]
 	month: number
 	year: number
   isCurrentMonth: boolean
 } & T
 
-export type Year<T = {}> = {
+export type Year<T extends {} = any> = {
 	months?: Month[]
 	year: number
   isCurrentYear: boolean

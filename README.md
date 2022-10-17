@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer">
-    <img width="180" src="https://github.com/nickgraffis/headless-calendar-fns/blob/master/docs/public/logo.svg" alt="Vite logo">
+  <a target="_blank" rel="noopener noreferrer">
+    <img width="180" src="https://raw.githubusercontent.com/nickgraffis/headless-calendar-fns/master/docs/public/logo.png" alt="Headless Calendar Functions">
   </a>
   <h1 align="center" >Headless Calendar Functions</h1>
 </p>
