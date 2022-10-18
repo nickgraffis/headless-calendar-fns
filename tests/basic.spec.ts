@@ -2,9 +2,10 @@ import { expect, test } from 'vitest'
 import createMatrix from '..';
 
 test('Create a year view', () => {
+  const currentYear = new Date().getFullYear()
   let matrix = createMatrix({
     view: 'year',
-    year: new Date().getFullYear() - 1,
+    year: currentYear - 1,
   })
 
   expect(matrix.current.year?.isCurrentYear).toBe(false)

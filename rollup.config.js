@@ -6,40 +6,47 @@ import resolve from 'rollup-plugin-node-resolve';
 import typescript from 'rollup-plugin-typescript';
 import {terser} from 'rollup-plugin-terser';
 import license from 'rollup-plugin-license'
-import { name, version, main, module, browser, author, types } from './package.json'
-import dts from 'rollup-plugin-dts'
+import { name, version, author } from './package.json'
 
 const isProduction = process.env.NODE_ENV === 'production'
-
+console.log(process.env.NODE_ENV)
 const bundle = config => ({
   ...config,
-  input: 'src/index.ts',
 })
 
 export default [
   bundle({
+    input: './src/timezones.ts',
     output: [
       {
-        file: main,
-        name: main,
+        file: './dist/timezones.js',
+        name: 'timezones',
         format: 'cjs',
         plugins: [
           isProduction && terser()
         ],
-        sourceMap: true,
       }, 
       {
-        file: module,
-        name: name,
+        file: './dist/timezones.mjs',
+        name: 'timezones',
         format: 'es',
-        sourceMap: true,
       }, 
       {
-        file: browser,
-        name: name,
+        file: './dist/timezones.js',
+        name: 'timezones',
         format: 'umd',
-        sourceMap: true,
+        plugins: [
+          isProduction && terser()
+        ],
       },
+      {
+        file: './dist/timezones.min.js',
+        name: 'timezones',
+        format: 'iife',
+        plugins: [
+          isProduction && terser()
+        ],
+      }
     ],
     plugins: [
       json(),
@@ -59,16 +66,9 @@ export default [
       license({
         banner: `
           ${name} v${version}
-          Copyright 2018<%= moment().format('YYYY') > 2018 ? '-' + moment().format('YYYY') : null %> ${author}
+          Copyright 2022<%= moment().format('YYYY') > 2022 ? '-' + moment().format('YYYY') : null %> ${author}
         `
       })
     ]
-  }),
-  bundle({
-    plugins: [dts()],
-    output: {
-      file: types,
-      format: 'es',
-    },
   }),
 ]

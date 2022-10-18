@@ -1,21 +1,34 @@
 import type { Plugin, Day, Hour, Minute, Month, Week, Options, Year } from "./types";
-export declare function isPromise(p: any): boolean;
-export declare function returnsPromise(f: Function): boolean;
-export declare function getNumberOfWeeksInMonth(month: number, year: number): number;
-export declare function getNumberOfDaysInMonth(month: number, year: number): number;
-export declare function getDateCellByIndex(weekIndex: number, dayIndex: number, month: number, year: number): Date;
-export declare function getDaysInWeek<T = {}>(weekIndex: number, month: number, year: number, options: Options, plugins?: Plugin[]): Day<T>[];
-export declare function getMinutesInHour<T = {}>(hour: number, date: Date, options: Options, plugins?: Plugin[]): Minute<T>[];
-export declare function getHoursinDay<T = {}>(date: Date, options?: Options, plugins?: Plugin[]): Hour<T>[];
-export declare function getCurrentWeek(month: number, year: number): number;
-export declare function getWeeksInMonth<T = {}>(month: number, year: number, options?: Options, plugins?: Plugin[]): Week<T>[];
-export declare function getMonthsInYear<T = {}>(year: number, options: Options, plugins?: Plugin[]): Month<T>[];
-export declare function getYears<T>(year: number, options: Options, plugins?: Plugin[]): Year<T>;
-export declare function weeksInMonth(monthOrObjOrDate: number | Date | {
-    month: number;
-    year: number;
-}, year?: number): number;
-export declare function daysInMonth(monthOrObjOrDate: number | Date | {
-    month: number;
-    year: number;
-}, year?: number): number;
+export declare class Calendar<T extends {} = any> {
+    private _options;
+    private _plugins;
+    private pluginLoadResponse;
+    private today;
+    constructor(options: Options);
+    get options(): Options;
+    get plugins(): Plugin<any, any, any>[];
+    getCalendar(): any;
+    getCalendarView(): any;
+    getMonth(date: Date): number;
+    getFullYear(date: Date): number;
+    getDay(date: Date): number;
+    getHours(date: Date): number;
+    getDate(date: Date): number;
+    getMinutes(date: Date): number;
+    isCurrentMonth(month: number, year: number): boolean;
+    isCurrentWeek(week: number, month: number, year: number): boolean;
+    isToday(day: number, month: number, year: number): boolean;
+    getYearView(year: number): Year;
+    getMonthView(month: number, year: number): Month;
+    getDayView(day: number, month: number, year: number): Day;
+    getWeekView(week: number, month: number, year: number): Week;
+    getHourView(hour: number, day: number, month: number, year: number): Hour;
+    getMinuteView(minute: number, hour: number, day: number, month: number, year: number): Minute;
+    isWeekend(year: number, month: number, day: number): boolean;
+    getWeekNumber(year: number, month: number, day: number): number;
+    getMonths(year: number): Month<T>[];
+    getWeeksInMonth(month: number, year: number): Week<T>[];
+    getDaysInWeek(weekIndex: number, month: number, year: number): Day<T>[];
+    getHoursinDay(date: Date): Hour<T>[];
+    getMinutesInHour(hour: number, date: Date): Minute<T>[];
+}

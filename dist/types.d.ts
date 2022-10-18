@@ -1,25 +1,37 @@
-import Timezone from "./timezones";
-export declare type Plugin = {
-    args?: any;
+import Timezone from "./_timezones";
+export declare type Plugin<PluginArgs extends {} = any, PluginResponse extends {} = any, PluginLoadResponse extends {} = any> = {
+    args?: PluginArgs;
     name: string;
     version: string;
     views: MatrixViews[];
-    fn: (date: Date, args?: any, week?: number) => any;
-    load?: (args?: any) => Promise<any>;
+    fn: (date: Date, args?: any, week?: number) => PluginResponse;
+    load?: (args?: PluginArgs) => Promise<PluginLoadResponse> | PluginResponse;
 };
-export declare type PluginArg = (args: any) => Plugin;
 export declare type Options = {
     includeMonths?: boolean;
     includeWeeks?: boolean;
     includeDays?: boolean;
     includeHours?: boolean;
     includeMinutes?: boolean;
+    createPrevNext?: boolean;
     timeZone?: Timezone;
     startOfDay?: number;
     hoursInDay?: number;
     daysInWeek?: number | 'weekends' | 'weekdays';
     startOfWeek?: number;
+    view: MatrixViews;
+    year: number;
+    month?: number;
+    week?: number;
+    day?: number;
+    hour?: number;
+    minute?: number;
+    plugins?: Plugin[];
     daysOfWeek?: string[] | 'long' | 'short' | 'narrow' | boolean;
+    dateRange?: {
+        start: Date;
+        end: Date;
+    };
     format?: {
         locales?: string;
         day?: 'numeric' | '2-digit';
@@ -30,15 +42,22 @@ export declare type Options = {
         minute?: 'numeric' | '2-digit';
     };
 };
-export declare type MatrixViews = 'year' | 'month' | 'week' | 'day' | 'hour' | 'minute';
-export declare type Matrix<T = {}> = {
+export declare enum MatrixViews {
+    'year' = "year",
+    'month' = "month",
+    'week' = "week",
+    'day' = "day",
+    'hour' = "hour",
+    'minute' = "minute"
+}
+export declare type Matrix<T extends {} = any> = {
     view: MatrixViews;
     year?: Year<T>;
-    months?: Month<T>[];
-    weeks?: Week<T>[];
-    days?: Day<T>[];
-    hours?: Hour<T>[];
-    minutes?: Minute<T>[];
+    month?: Month<T>;
+    week?: Week<T>;
+    day?: Day<T>;
+    hour?: Hour<T>;
+    minute?: Minute<T>;
     currentDay?: number;
     currentMonth?: number;
     currentYear?: number;
@@ -46,13 +65,14 @@ export declare type Matrix<T = {}> = {
     currentMinute?: number;
     currentWeek?: number;
 };
-export declare type Calendar<T = {}> = {
+export declare type Calendar<T extends {} = any> = {
     view: MatrixViews;
-    prev: Matrix<T>;
+    timezone: Timezone;
+    prev?: Matrix<T>;
     current: Matrix<T>;
-    next: Matrix<T>;
+    next?: Matrix<T>;
 };
-export declare type Minute<T = {}> = {
+export declare type Minute<T extends {} = any> = {
     date: string;
     minute: number;
     hour: number;
@@ -61,17 +81,17 @@ export declare type Minute<T = {}> = {
     year: number;
     isCurrentMinute: boolean;
 } & T;
-export declare type Hour<T = {}> = {
+export declare type Hour<T extends {} = any> = {
     date: string;
-    minutes?: Minute[];
+    minutes?: Minute<T>[];
     hour: number;
     day: number;
     month: number;
     year: number;
     isCurrentHour: boolean;
 } & T;
-export declare type Day<T = {}> = {
-    hours?: Hour[];
+export declare type Day<T extends {} = any> = {
+    hours?: Hour<T>[];
     date: string;
     isToday: boolean;
     isWeekend: boolean;
@@ -80,21 +100,21 @@ export declare type Day<T = {}> = {
     year: number;
     day: string | number;
 } & T;
-export declare type Week<T = {}> = {
-    days?: Day[];
+export declare type Week<T extends {} = any> = {
+    days?: Day<T>[];
     week: number;
     month: number;
     year: number;
     isCurrentWeek: boolean;
 } & T;
-export declare type Month<T = {}> = {
-    weeks?: Week[];
+export declare type Month<T extends {} = any> = {
+    weeks?: Week<T>[];
     month: number;
     year: number;
     isCurrentMonth: boolean;
 } & T;
-export declare type Year<T = {}> = {
-    months?: Month[];
+export declare type Year<T extends {} = any> = {
+    months?: Month<T>[];
     year: number;
     isCurrentYear: boolean;
 } & T;

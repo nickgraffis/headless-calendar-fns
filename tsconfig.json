@@ -31,5 +31,11 @@
         "node_modules",
         "dist",
         "**/*.spec.ts"
-    ]
+    ],
+    "ts-node": {
+        "compilerOptions": {
+          "module": "CommonJS",
+          "esModuleInterop": true
+        }
+      }
 }

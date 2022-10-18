@@ -1,190 +1,49 @@
-import { getDaysInWeek, getHoursinDay, getMinutesInHour, getMonthsInYear, getWeeksInMonth, getYears } from "./dates";
-import { MatrixViews } from "./types";
-import type { Calendar, Plugin, Options } from "./types";
-
-export default function createMatrix<T = {}>(
-  options: Options & {
-    view: MatrixViews,
-    year: number,
-    month?: number,
-    week?: number,
-    day?: number,
-    hour?: number,
-		plugins?: Plugin[]
-  }
-): Calendar<T> {
-  const { 
-    view,
-    year,
-    month,
-    week,
-    day,
-    hour,
-		plugins,
-  } = options
-
-  options.includeMonths = options.includeMonths || true
-  options.includeWeeks = options.includeWeeks || true
-  options.includeDays = options.includeDays || true
-  options.includeHours = options.includeHours || false
-  options.includeMinutes = options.includeMinutes || false
-
-  let loadedPluginData;
-  if (options?.plugins?.some(plugin => plugin?.load)) {
-    for (const plugin of options.plugins) {
-      if (plugin.load) {
-        // loadedPluginData = await plugin.load(options);
-      }
-    }
-  }
-
-
-  switch(view) {
-    case 'year':
-      return {
-        view,
-        prev: {
-          view: 'year',
-          year: getYears<T>(year -1, options, plugins),
-        },
-        current: {
-          view: 'year',
-          year: getYears<T>(year, options, plugins),
-        },
-        next: {
-          view: 'year',
-          year: getYears<T>(year + 1, options, plugins),
-        }
-      }
-    case 'month':
-      return {
-        view,
-        current: {
-          view,
-          months: getMonthsInYear<T>(year, options, plugins)
-        },
-        prev: {
-          view,
-          months: getMonthsInYear<T>(year - 1, options, plugins)
-        },
-        next: {
-          view,
-          months: getMonthsInYear<T>(year + 1, options, plugins)
-        }
-      }
-    case 'week':
-      if ((!month && month !== 0) || !year) {
-        throw new Error('month and year is required, when creating a matrix for month view')
-      }
-      return {
-        view,
-        current: {
-          view,
-          weeks: getWeeksInMonth<T>(month, year, options, plugins)
-        },
-        prev: {
-          view,
-          weeks: getWeeksInMonth<T>(month - 1, year, options, plugins)
-        },
-        next: {
-          view,
-          weeks: getWeeksInMonth<T>(month + 1, year, options, plugins)
-        }
-      }
-    case 'day':
-      if (!week || !month || !year) {
-        throw new Error('week, month, year is required, when creating a matrix for week view')
-      }
-      return {
-        view,
-        current: {
-          view,
-          days: getDaysInWeek<T>(week, month, year, options, plugins)
-        },
-        prev: {
-          view,
-          days: getDaysInWeek<T>(week - 1, month, year, options, plugins)
-        },
-        next: {
-          view,
-          days: getDaysInWeek<T>(week + 1, month, year, options, plugins)
-        }
-      }
-    case 'hour':
-      if (!day || !month || !year) {
-        throw new Error('day, month, year is required, when creating a matrix for day view')
-      }
-      return {
-        view,
-        current: {
-          view,
-          hours: getHoursinDay<T>(new Date(year, month, day), options, plugins)
-        },
-        prev: {
-          view,
-          hours: getHoursinDay<T>(new Date(year, month, day - 1), options, plugins)
-        },
-        next: {
-          view,
-          hours: getHoursinDay<T>(new Date(year, month, day + 1), options, plugins)
-        }
-      }
-    case 'minute':
-      if (!hour || !day || !month || !year) {
-        throw new Error('hour, day, month, year is required, when creating a matrix for hour view')
-      }
-      return {
-        view,
-        current: {
-          view,
-          minutes: getMinutesInHour<T>(hour, new Date(year, month, day), options, plugins)
-        },
-        prev: {
-          view,
-          minutes: getMinutesInHour<T>(hour - 1, new Date(year, month, day), options, plugins)
-        },
-        next: {
-          view,
-          minutes: getMinutesInHour<T>(hour + 1, new Date(year, month, day), options, plugins)
-        }
-      }
-      default:
-        throw new Error('Invalid view, must be one of: year, month, week, day, hour')
-    }
-}
-
 import { Calendar as CalendarConstructor } from "./dates";
+import type { Calendar, Options } from "./types";
 import { MatrixViews } from "./types";
-import type { Calendar, Plugin, Options } from "./types";
+import { checkIfInBetweenTwoViews, createMatrixOutputForView, createOptionsForNextView, createOptionsForPrevView } from "./utils";
 
-export default function createMatrix<T = {}>(
-  options: Options & {
-    view: MatrixViews,
-    year: number,
-    month?: number,
-    week?: number,
-    day?: number,
-    hour?: number,
-		plugins?: Plugin[]
-  }
+export default function createMatrix<T extends {} = any>(
+  options: Options
 ): Calendar<T> {
 
-  options.includeMonths = options.includeMonths || true
-  options.includeWeeks = options.includeWeeks || true
-  options.includeDays = options.includeDays || true
-  options.includeHours = options.includeHours || false
-  options.includeMinutes = options.includeMinutes || false
+  // By default, we want to include months for year
+  if (checkIfInBetweenTwoViews(MatrixViews.year, MatrixViews.year)) 
+    options.includeMonths = options.includeMonths || true
+  else options.includeMonths = options.includeMonths || false
+  // By default, we want to include weeks for year, or month view
+  if (checkIfInBetweenTwoViews(MatrixViews.year, MatrixViews.month))
+    options.includeWeeks = options.includeWeeks || true
+  else options.includeWeeks = options.includeWeeks || false
+  // By default, we want to include days for year, month, or week view
+  if (checkIfInBetweenTwoViews(MatrixViews.year, MatrixViews.week))
+    options.includeDays = options.includeDays || true
+  else options.includeDays = options.includeDays || false
+  // By default, we want to include hours for week, or day view
+  if (checkIfInBetweenTwoViews(MatrixViews.week, MatrixViews.hour))
+    options.includeHours = options.includeHours || true
+  else options.includeHours = options.includeHours || false
+  // By default, we want to include minutes for week, day, or hour view
+  if (checkIfInBetweenTwoViews(MatrixViews.week, MatrixViews.minute))
+    options.includeMinutes = options.includeMinutes || true
+  else options.includeMinutes = options.includeMinutes || false
 
-  const calendar = new CalendarConstructor<T>(options)
-  const nextCalendar = new CalendarConstructor<T>(createOptionsForNextView(options))
-  const prevCalendar = new CalendarConstructor<T>(createOptionsForPrevView(options))
+  // By default, we create a calendar for the current view, previous view, and next view
+  options.createPrevNext = options.createPrevNext || true
 
-  const matrix: Calendar<T> = {
-    view: options.view,
-    prev: {
-      view: options.view,
-      matrix: prevCalendar.getCalendar()
-    },
-    next: nextCalendar.getCalendar(),
-  }
+  let calendar = new CalendarConstructor<T>(options)
+  let nextCalendar
+  if (options.createPrevNext) nextCalendar = new CalendarConstructor<T>(createOptionsForNextView(options))
+  let prevCalendar 
+  if (options.createPrevNext) prevCalendar = new CalendarConstructor<T>(createOptionsForPrevView(options))
+
+  const matrix = createMatrixOutputForView(
+    options,
+    calendar.getCalendar(),
+    prevCalendar?.getCalendar(),
+    nextCalendar?.getCalendar()
+  )
+
+  return matrix
 }
+

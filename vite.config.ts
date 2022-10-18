@@ -1,14 +1,9 @@
 // vite.config.js
 import path from 'path' 
 import { defineConfig } from 'vite'
-import commonjs from 'rollup-plugin-commonjs';
-import json from 'rollup-plugin-json';
-import resolve from 'rollup-plugin-node-resolve';
-import {terser} from 'rollup-plugin-terser';
 import license from 'rollup-plugin-license'
-import { name, version, author, typings } from './package.json'
+import { name, version, author } from './package.json'
 import typescript from '@rollup/plugin-typescript';
-import emitModulePackageFile from './build-plugins/emit-esm-package';
 const resolvePath = (str) => path.resolve(__dirname, str)
 
 const fileName = (format) => {
@@ -25,6 +20,15 @@ module.exports = defineConfig({
         exclude: resolvePath('../node_modules/**'),
       }),
       apply: 'build',
+    },
+    {
+      ...license({
+        banner: `
+          ${name} v${version}
+          Copyright 2022<%= moment().format('YYYY') > 2022 ? '-' + moment().format('YYYY') : null %> ${author}
+        `
+      }),
+      apply: 'build',
     }
   ],
   build: {
@@ -33,8 +37,6 @@ module.exports = defineConfig({
       name: 'createMatrix',
       formats: ['cjs', 'es', 'umd', 'iife'],
       fileName
-    },
-    rollupOptions: {
     }
   }
 })

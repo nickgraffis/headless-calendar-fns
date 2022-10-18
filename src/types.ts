@@ -1,4 +1,4 @@
-import Timezone from "./timezones"
+import Timezone from "./_timezones"
 
 export type Plugin<PluginArgs extends {} = any, PluginResponse extends {} = any, PluginLoadResponse extends {} = any> = {
   args?: PluginArgs,
@@ -18,11 +18,20 @@ export type Options = {
   includeDays?: boolean
   includeHours?: boolean
   includeMinutes?: boolean
+  createPrevNext?: boolean
   timeZone?: Timezone
   startOfDay?: number
   hoursInDay?: number
   daysInWeek?: number | 'weekends' | 'weekdays'
   startOfWeek?: number
+  view: MatrixViews,
+  year: number,
+  month?: number,
+  week?: number,
+  day?: number,
+  hour?: number,
+  minute?: number,
+  plugins?: Plugin[]
   daysOfWeek?: string[] | 'long' | 'short' | 'narrow' | boolean
   dateRange?: {
     start: Date,
@@ -33,29 +42,29 @@ export type Options = {
     day?: 'numeric' | '2-digit',
     month?: 'numeric' | '2-digit' | 'long' | 'short' | 'narrow',
     year?: 'numeric' | '2-digit',
-    weekday?: 'long' | 'short' | 'narrow' | 'numeric',
+    weekday?: 'long' | 'short' | 'narrow',
     hour?: 'numeric' | '2-digit',
     minute?: 'numeric' | '2-digit',
   },
 }
 
 export enum MatrixViews {
-  'year',
-  'month',
-  'week',
-  'day',
-  'hour',
-  'minute'
+  'year' = 'year',
+  'month' = 'month',
+  'week' = 'week',
+  'day' = 'day',
+  'hour' = 'hour',
+  'minute' = 'minute',
 }
 
 export type Matrix<T extends {} = any> = {
   view: MatrixViews
   year?: Year<T>
-  months?: Month<T>[]
-  weeks?: Week<T>[]
-  days?: Day<T>[]
-  hours?: Hour<T>[]
-  minutes?: Minute<T>[]
+  month?: Month<T>
+  week?: Week<T>
+  day?: Day<T>
+  hour?: Hour<T>
+  minute?: Minute<T>
   currentDay?: number
   currentMonth?: number
   currentYear?: number
@@ -66,9 +75,10 @@ export type Matrix<T extends {} = any> = {
 
 export type Calendar<T extends {} = any> = {
   view: MatrixViews,
-  prev: Matrix<T>,
+  timezone: Timezone,
+  prev?: Matrix<T>,
   current: Matrix<T>,
-  next: Matrix<T>
+  next?: Matrix<T>
 }
 
 export type Minute<T extends {} = any> = {
@@ -83,7 +93,7 @@ export type Minute<T extends {} = any> = {
 
 export type Hour<T extends {} = any> = {
 	date: string
-	minutes?: Minute[]
+	minutes?: Minute<T>[]
 	hour: number
 	day: number
 	month: number
@@ -92,7 +102,7 @@ export type Hour<T extends {} = any> = {
 } & T
 
 export type Day<T extends {} = any> = {
-	hours?: Hour[]
+	hours?: Hour<T>[]
   date: string
   isToday: boolean
   isWeekend: boolean
@@ -103,7 +113,7 @@ export type Day<T extends {} = any> = {
 } & T
 
 export type Week<T extends {} = any> = {
-	days?: Day[]
+	days?: Day<T>[]
 	week: number
 	month: number
 	year: number
@@ -111,14 +121,14 @@ export type Week<T extends {} = any> = {
 } & T
 
 export type Month<T extends {} = any> = {
-	weeks?: Week[]
+	weeks?: Week<T>[]
 	month: number
 	year: number
   isCurrentMonth: boolean
 } & T
 
 export type Year<T extends {} = any> = {
-	months?: Month[]
+	months?: Month<T>[]
 	year: number
   isCurrentYear: boolean
 } & T

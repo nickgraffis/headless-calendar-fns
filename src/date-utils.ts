@@ -1,4 +1,4 @@
-import Timezone from "./timezones";
+import Timezone from "./_timezones";
 
 /**
  * Get the number of weeks in a given month.
@@ -27,8 +27,8 @@ export function weeksInMonth(monthOrObjOrDate: number | Date | { month: number, 
   ) {
     _month = monthOrObjOrDate
   } else {
-    _month = new Date((monthOrObjOrDate as Date).toUTCString()).getMonth()
-    year = new Date((monthOrObjOrDate as Date).toUTCString()).getFullYear()
+    _month = new Date(monthOrObjOrDate).getMonth()
+    year = new Date(monthOrObjOrDate).getFullYear()
   }
   
   return getNumberOfWeeksInMonth(_month, year)
@@ -173,12 +173,12 @@ export function getDateCellByIndex(
     throw new Error('Year must be a number.')
   }
 
-  const date = new Date(Date.UTC(year, month, 1))
+  const date = new Date(year, month, 1)
   const day = date.getDay()
   const firstDayIndex = day === 0 ? 6 : day - 1
   const index = weekIndex * 7 + dayIndex
   const dateIndex = index - firstDayIndex
-  const dateCell = new Date(Date.UTC(year, month, dateIndex))
+  const dateCell = new Date(year, month, dateIndex)
   return dateCell
 }
 
@@ -400,4 +400,29 @@ export function getDate(date: Date, { timeZone, locale }: { timeZone: Timezone, 
   const dateString = date.toLocaleString(locale, { timeZone, day: 'numeric' })
   const day = parseInt(dateString)
   return day
+}
+
+/**
+ * Get the week index of the month for a given date. Timezone and locale aware.
+ * @param date - The date as a Date object.
+ * @param options
+ * @param options.timezone - The timezone as a timezone string. {@link https://en.wikipedia.org/wiki/List_of_tz_database_time_zones List of tz database time zones}.
+ * @param options.locale - The locale as a locale string. {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl#Locale_identification_and_negotiation Locale identification and negotiation}. 
+ * @returns - The week index of the month as a number.
+ * @throws - If the date is not a Date object.
+ * @throws - If the timezone is not a timezone string.
+ * @throws - If the locale is not a locale string.
+ * @example
+ * ```ts
+ * import { getWeekNumber } from 'headless-calendar-fns'
+ * getWeekNumber(new Date('2021-01-01T04:00:00'), { timezone: 'America/New_York', locale: 'en-US' }) // 1
+ * getWeekNumber(new Date('2021-01-012T04:00:00'), { timezone: 'America/New_York', locale: 'en-US' }) // 2
+ * ```
+ */
+export function getWeekNumber(date: Date, { timeZone, locale }: { timeZone: Timezone, locale: string }): number {
+  checkArgs([date, { timeZone, locale }])
+
+  const day = getDate(date, { timeZone, locale })
+  const _weekNumber = Math.ceil(day / 7)
+  return _weekNumber
 }
