@@ -1,5 +1,5 @@
 import Timezone from "./_timezones";
-import type { Calendar, Day, Hour, Minute, Month, Options, Plugin, Week, Year } from "./types";
+import type { Calendar, CreateMatrixOutputForViewAsPromiseArgs, Day, Hour, Minute, Month, Options, Plugin, View, Week, Year } from "./types";
 import { MatrixViews } from "./types";
 
 export function createOptionsForNextView(options: Options): Options {
@@ -97,11 +97,31 @@ export function createOptionsForPrevView(options: Options & {
   }
 }
 
+export function createMatrixOutputForViewAsPromise<T extends {} = any>(
+  args: CreateMatrixOutputForViewAsPromiseArgs<T>
+): Promise<Calendar<T>> {
+  return new Promise((resolve) => {
+    const [options, currentCalendar, prevCalendar, nextCalendar] = args;
+    Promise.all([currentCalendar, prevCalendar, nextCalendar]).then(
+      ([current, prev, next]) => {
+        resolve(
+          createMatrixOutputForView<T>(
+            options,
+            current,
+            prev,
+            next
+          )
+        )
+      }
+    );
+  });
+}
+
 export function createMatrixOutputForView<T extends {} = any>(
   options: Options, 
-  currentCalendar: Month<T> | Week<T> | Day<T> | Hour<T> | Minute<T> | Year<T>, 
-  prevCalendar?: Month<T> | Week<T> | Day<T> | Hour<T> | Minute<T> | Year<T>,
-  nextCalendar?: Month<T> | Week<T> | Day<T> | Hour<T> | Minute<T> | Year<T>
+  currentCalendar: View<T>, 
+  prevCalendar?: View<T>,
+  nextCalendar?: View<T>
 ): Calendar<T> {
   switch (options.view) {
     case MatrixViews.year:

@@ -1,11 +1,12 @@
+import { returnsPromise } from './promise-utils';
 import { Calendar as CalendarConstructor } from "./dates";
-import type { Calendar, Options } from "./types";
+import type { Options, View } from "./types";
 import { MatrixViews } from "./types";
-import { checkIfInBetweenTwoViews, createMatrixOutputForView, createOptionsForNextView, createOptionsForPrevView } from "./utils";
+import { checkIfInBetweenTwoViews, createMatrixOutputForView, createMatrixOutputForViewAsPromise, createOptionsForNextView, createOptionsForPrevView } from "./utils";
 
 export default function createMatrix<T extends {} = any>(
   options: Options
-): Calendar<T> {
+) {
 
   // By default, we want to include months for year
   if (checkIfInBetweenTwoViews(MatrixViews.year, MatrixViews.year)) 
@@ -37,12 +38,24 @@ export default function createMatrix<T extends {} = any>(
   let prevCalendar 
   if (options.createPrevNext) prevCalendar = new CalendarConstructor<T>(createOptionsForPrevView(options))
 
-  const matrix = createMatrixOutputForView(
-    options,
-    calendar.getCalendar(),
-    prevCalendar?.getCalendar(),
-    nextCalendar?.getCalendar()
-  )
+  let usePromise = returnsPromise(calendar.getCalendar)
+  let matrix;
+
+  if (usePromise) {
+    matrix = createMatrixOutputForViewAsPromise<T>([
+      options,
+      calendar.getCalendar() as Promise<View<T>>,
+      (prevCalendar ? prevCalendar.getCalendar() : null) as Promise<View<T>> | undefined,
+      (nextCalendar ? nextCalendar.getCalendar() : null) as Promise<View<T>> | undefined
+    ])
+  } else {
+    matrix = createMatrixOutputForView(
+      options,
+      calendar.getCalendar() as View<T>,
+      prevCalendar?.getCalendar() as View<T>,
+      nextCalendar?.getCalendar() as View<T>
+    )
+  }
 
   return matrix
 }

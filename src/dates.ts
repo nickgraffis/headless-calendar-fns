@@ -1,4 +1,4 @@
-import type { Plugin, Day, Hour, Minute, Month, Week, Options, Year } from "./types"
+import type { Plugin, Day, Hour, Minute, Month, Week, Options, Year, View } from "./types"
 import { getNumberOfWeeksInMonth, getDateCellByIndex, getMonth, getFullYear, getDay, getHours, getDate, getMinutes, getWeekNumber } from "./date-utils";
 import { MatrixViews } from "./types";
 import Timezone from "./_timezones";
@@ -9,71 +9,72 @@ export class Calendar<T extends {} = any> {
   private _plugins: Plugin[];
   private pluginLoadResponse: any = {}
   private today: Date;
-
+  
   constructor(options: Options) {
     this._options = options
     this._plugins = options.plugins || []
     this.today = new Date()
   }
 
-  get options() {
+  private get options() {
     return this._options
   }
 
-  get plugins() {
+  private get plugins() {
     return this._plugins
   }
 
-  getCalendar() {
+  // The only public function that returns the calendar view
+  getCalendar(): View<T> | Promise<View<T>> {
     const preLoadPlugins = this.plugins?.filter(plugin => plugin.load)
     if (preLoadPlugins?.length) {
       const preLoadPluginsReturningAPromise = preLoadPlugins.filter(plugin => plugin.load && returnsPromise(plugin.load))
       const preLoadPluginsNotReturningAPromise = preLoadPlugins.filter(plugin => plugin.load && !returnsPromise(plugin.load))
       if (preLoadPluginsReturningAPromise.length) {
         const promises = preLoadPluginsReturningAPromise.map(plugin => plugin.load && plugin.load(this.options))
-        Promise.all(promises).then((values) => {
+        return Promise.all(promises).then((values) => {
           values.forEach((value, index) => {
             this.pluginLoadResponse[preLoadPluginsReturningAPromise[index].name] = value
           })
           preLoadPluginsNotReturningAPromise.forEach(plugin => {
             this.pluginLoadResponse[plugin.name] = plugin.load && plugin.load(this.options)
           })
-          return this.getCalendarView()
+          return this.#getCalendarView()
         })
       } else {
         preLoadPluginsNotReturningAPromise.forEach(plugin => {
           this.pluginLoadResponse[plugin.name] = plugin.load && plugin.load(this.options)
         })
-        return this.getCalendarView()
+        return this.#getCalendarView()
       }
     } 
 
-    return this.getCalendarView()
+    return this.#getCalendarView()
   }
 
-  getCalendarView() {
+  #getCalendarView(): View<T> {
     switch(this.options?.view) {
       case MatrixViews.year:
-        return this.getYearView(this.options.year)
+        return this.#getYearView(this.options.year) as Year
       case MatrixViews.month:
         if (this.options.month === undefined || this.options.month === null) {
           throw new Error('Month is required for month view')
         }
-        return this.getMonthView(this.options.month, this.options.year)
+        return this.#getMonthView(this.options.month, this.options.year) as Month
       case MatrixViews.week:
         if (this.options.week === undefined || this.options.week === null) {
           throw new Error('Week is required for week view')
         } else if (this.options.month === undefined || this.options.month === null) {
           throw new Error('Month is required for week view')
         }
-        return this.getWeekView(this.options.week, this.options.month, this.options.year)
+        return this.#getWeekView(this.options.week, this.options.month, this.options.year) as Week
       case MatrixViews.day:
         if (this.options.month === undefined || this.options.month === null) {
           throw new Error('Month is required for day view')
         } else if (this.options.day === undefined || this.options.day === null) {
           throw new Error('Day is required for day view')
         }
-        return this.getDayView(this.options.day, this.options.month, this.options.year)
+        return this.#getDayView(this.options.day, this.options.month, this.options.year) as Day
       case MatrixViews.hour:
         if (this.options.month === undefined || this.options.month === null) {
           throw new Error('Month is required for hour view')
@@ -82,13 +83,24 @@ export class Calendar<T extends {} = any> {
         } else if (this.options.day === undefined || this.options.day === null) {
           throw new Error('Day is required for hour view')
         }
-        return this.getHourView(this.options.hour, this.options.year, this.options.month, this.options.day)
+        return this.#getHourView(this.options.hour, this.options.year, this.options.month, this.options.day) as Hour
+      case MatrixViews.minute:
+        if (this.options.month === undefined || this.options.month === null) {
+          throw new Error('Month is required for minute view')
+        } else if (this.options.minute === undefined || this.options.minute === null) {
+          throw new Error('Minute is required for minute view')
+        } else if (this.options.day === undefined || this.options.day === null) {
+          throw new Error('Day is required for minute view')
+        } else if (this.options.hour === undefined || this.options.hour === null) {
+          throw new Error('Hour is required for minute view')
+        }
+        return this.#getMinuteView(this.options.minute, this.options.year, this.options.month, this.options.day, this.options.hour) as Minute
       default:
         throw new Error('Invalid view, must be one of: year, month, week, day, hour')
     }
   }
 
-  getMonth(date: Date) {
+  #getMonth(date: Date) {
     return getMonth(
       date, 
       { 
@@ -98,7 +110,7 @@ export class Calendar<T extends {} = any> {
     )
   }
 
-  getFullYear(date: Date) {
+  #getFullYear(date: Date) {
     return getFullYear(
       date,
       {
@@ -108,7 +120,7 @@ export class Calendar<T extends {} = any> {
     )
   } 
 
-  getDay(date: Date) {
+  #getDay(date: Date) {
     return getDay(
       date,
       {
@@ -118,7 +130,7 @@ export class Calendar<T extends {} = any> {
     )
   }
 
-  getHours(date: Date) {
+  #getHours(date: Date) {
     return getHours(
       date,
       {
@@ -128,7 +140,7 @@ export class Calendar<T extends {} = any> {
     )
   }
 
-  getDate(date: Date) {
+  #getDate(date: Date) {
     return getDate(
       date,
       {
@@ -138,7 +150,7 @@ export class Calendar<T extends {} = any> {
     )
   }
 
-  getMinutes(date: Date) {
+  #getMinutes(date: Date) {
     return getMinutes(
       date,
       {
@@ -148,91 +160,91 @@ export class Calendar<T extends {} = any> {
     )
   }
 
-  isCurrentMonth(month: number, year: number) {
-    return this.getMonth(this.today) === month && this.getFullYear(this.today) === year
+  #isCurrentMonth(month: number, year: number) {
+    return this.#getMonth(this.today) === month && this.#getFullYear(this.today) === year
   }
 
-  isCurrentWeek(week: number, month: number, year: number) {
-    return this.getWeekNumber(this.getFullYear(this.today), this.getMonth(this.today), this.getDate(this.today)) === week && this.getMonth(this.today) === month && this.getFullYear(this.today) === year
+  #isCurrentWeek(week: number, month: number, year: number) {
+    return this.#getWeekNumber(this.#getFullYear(this.today), this.#getMonth(this.today), this.#getDate(this.today)) === week && this.#getMonth(this.today) === month && this.#getFullYear(this.today) === year
   }
 
-  isToday(day: number, month: number, year: number) {
-    return this.getDay(this.today) === day && this.getMonth(this.today) === month && this.getFullYear(this.today) === year
+  #isToday(day: number, month: number, year: number) {
+    return this.#getDay(this.today) === day && this.#getMonth(this.today) === month && this.#getFullYear(this.today) === year
   }
 
-  getYearView(year: number): Year {
-    const months: Month<T>[] = this.getMonths(year)
+  #getYearView(year: number): Year {
+    const months: Month<T>[] = this.#getMonths(year)
     return {
       year,
       months,
-      isCurrentYear: this.getFullYear(this.today) === year
+      isCurrentYear: this.#getFullYear(this.today) === year
     }
   }
 
-  getMonthView(month: number, year: number): Month {
-    const weeks: Week<T>[] = this.getWeeksInMonth(month, year)
+  #getMonthView(month: number, year: number): Month {
+    const weeks: Week<T>[] = this.#getWeeksInMonth(month, year)
     return {
       month,
       year,
       weeks,
-      isCurrentMonth: this.isCurrentMonth(month, year)
+      isCurrentMonth: this.#isCurrentMonth(month, year)
     }
   }
 
-  getDayView(day: number, month: number, year: number): Day {
-    const hours = this.getHoursinDay(new Date(year, month, day))
+  #getDayView(day: number, month: number, year: number): Day {
+    const hours = this.#getHoursinDay(new Date(year, month, day))
     return {
       day,
       month,
       year,
-      week: this.getWeekNumber(year, month, day),
+      week: this.#getWeekNumber(year, month, day),
       hours,
-      isToday: this.isToday(day, month, year),
-      isWeekend: this.isWeekend(year, month, day)
+      isToday: this.#isToday(day, month, year),
+      isWeekend: this.#isWeekend(year, month, day)
     }
   }
 
-  getWeekView(week: number, month: number, year: number): Week {
-    const days = this.getDaysInWeek(week, month, year)
+  #getWeekView(week: number, month: number, year: number): Week {
+    const days = this.#getDaysInWeek(week, month, year)
     return {
       week,
       month,
       year,
       days,
-      isCurrentWeek: this.isCurrentWeek(week, month, year)
+      isCurrentWeek: this.#isCurrentWeek(week, month, year)
     }
   }
 
-  getHourView(hour: number, day: number, month: number, year: number): Hour {
-    const minutes = this.getMinutesInHour(hour, new Date(year, month, day))
+  #getHourView(hour: number, day: number, month: number, year: number): Hour {
+    const minutes = this.#getMinutesInHour(hour, new Date(year, month, day))
     return {
       hour,
       day,
       month,
       year,
       minutes,
-      isToday: this.isToday(day, month, year),
-      isCurrentHour: this.getHours(this.today) === hour && this.isToday(day, month, year)
+      isToday: this.#isToday(day, month, year),
+      isCurrentHour: this.#getHours(this.today) === hour && this.#isToday(day, month, year)
     }
   }
 
-  getMinuteView(minute: number, hour: number, day: number, month: number, year: number): Minute {
+  #getMinuteView(minute: number, hour: number, day: number, month: number, year: number): Minute {
     return {
       minute,
       hour,
       day,
       month,
       year,
-      isToday: this.isToday(day, month, year),
-      isCurrentMinute: this.getMinutes(this.today) === minute && this.getHours(this.today) === hour && this.isToday(day, month, year)
+      isToday: this.#isToday(day, month, year),
+      isCurrentMinute: this.#getMinutes(this.today) === minute && this.#getHours(this.today) === hour && this.#isToday(day, month, year)
     }
   }
 
-  isWeekend(year: number, month: number, day: number) {
-    return this.getDay(new Date(year, month, day)) === 0 || this.getDay(new Date(year, month, day)) === 6
+  #isWeekend(year: number, month: number, day: number) {
+    return this.#getDay(new Date(year, month, day)) === 0 || this.#getDay(new Date(year, month, day)) === 6
   }
 
-  getWeekNumber(year: number, month: number, day: number) {
+  #getWeekNumber(year: number, month: number, day: number) {
     return getWeekNumber(
       new Date(year, month, day),
       {
@@ -242,7 +254,7 @@ export class Calendar<T extends {} = any> {
     )
   }
 
-  getMonths(year: number) {
+  #getMonths(year: number) {
     const months: Month[] = []
     for (let i = 0; i < 12; i++) {
       let pluginResults = {}
@@ -250,6 +262,8 @@ export class Calendar<T extends {} = any> {
         if (plugin.views.includes(MatrixViews.year)) {
           pluginResults = {
             // IMPORTANT: plugin.fn passes in the date as UTC!
+            // We should maybe have it pass the timezone as well?
+            // And maybe a plugin option where you can specify if you want UTC or not?
             ...plugin.fn(new Date(new Date(year, i)), {
               ...plugin.args,
               ...this.pluginLoadResponse?.[plugin.name] || {}
@@ -259,17 +273,17 @@ export class Calendar<T extends {} = any> {
         }
       })
       months.push({
-        ...(this.options.includeWeeks) && { weeks: this.getWeeksInMonth(i, year) },
+        ...(this.options.includeWeeks) && { weeks: this.#getWeeksInMonth(i, year) },
         month: i,
         year,
-        isCurrentMonth: this.isCurrentMonth(i, year),
+        isCurrentMonth: this.#isCurrentMonth(i, year),
         ...pluginResults
       })
     }
     return months as Month<T>[]
   }
 
-  getWeeksInMonth(month: number, year: number) {
+  #getWeeksInMonth(month: number, year: number) {
     const weeks: Week[] = []
     const numberOfWeeks = getNumberOfWeeksInMonth(month, year)
     for (let i = 0; i < numberOfWeeks; i++) {
@@ -287,18 +301,18 @@ export class Calendar<T extends {} = any> {
         }
       })
       weeks.push({
-        ...(this.options.includeDays) && { days: this.getDaysInWeek(i, month, year) },
+        ...(this.options.includeDays) && { days: this.#getDaysInWeek(i, month, year) },
         week: i,
         year,
         month,
-        isCurrentWeek: this.isCurrentWeek(i, month, year),
+        isCurrentWeek: this.#isCurrentWeek(i, month, year),
         ...pluginResults
       })
     }
     return weeks as Week<T>[]
   }
 
-  getDaysInWeek(weekIndex: number, month: number, year: number) {
+  #getDaysInWeek(weekIndex: number, month: number, year: number) {
     const days: Day[] = []
     let daysInWeek = 7
     let startOfWeek = 0
@@ -340,18 +354,18 @@ export class Calendar<T extends {} = any> {
         }
       })
 
-      let day: string | number = this.getDay(date)
+      let day: string | number = this.#getDay(date)
       if (this.options?.daysOfWeek) {
         if (Array.isArray(this.options.daysOfWeek)) {
-          day = this.options.daysOfWeek[this.getDate(date)]
+          day = this.options.daysOfWeek[this.#getDate(date)]
         } else if (typeof this.options.daysOfWeek === 'string' && ['long', 'short', 'narrow'].includes(this.options.daysOfWeek)) {
           day = date.toLocaleDateString(this.options.format?.locales || 'en-us', { weekday: this.options.daysOfWeek, timeZone: this.options.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone })
         }
-      } else if (!this.options.daysOfWeek) day = this.getDate(date)
-      else day = this.getDate(date)
+      } else if (!this.options.daysOfWeek) day = this.#getDate(date)
+      else day = this.#getDate(date)
       
       days.push({
-        ...(this.options?.includeHours) && { hours: this.getHoursinDay(date) },
+        ...(this.options?.includeHours) && { hours: this.#getHoursinDay(date) },
         date: new Date(date).toLocaleString(
             this.options?.format?.locales || 
             'en-US', { 
@@ -359,8 +373,8 @@ export class Calendar<T extends {} = any> {
               timeZone: this.options?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone
             }
           ),
-        isToday: this.isToday(this.getDate(date), this.getMonth(date), this.getFullYear(date)),
-        isWeekend: this.getDay(date) === 0 || this.getDay(date) === 6,
+        isToday: this.#isToday(this.#getDate(date), this.#getMonth(date), this.#getFullYear(date)),
+        isWeekend: this.#getDay(date) === 0 || this.#getDay(date) === 6,
         day,
         week: weekIndex,
         month,
@@ -372,7 +386,7 @@ export class Calendar<T extends {} = any> {
     return days as Day<T>[]
   }
 
-  getHoursinDay(date: Date) {
+  #getHoursinDay(date: Date) {
     let hours: Hour[] = []
     let startOfDay = 0
     let hoursInDay = 24
@@ -400,7 +414,7 @@ export class Calendar<T extends {} = any> {
         }
       })
       let _date = new Date(new Date().toLocaleString(this.options?.format?.locales || 'en-us', { timeZone: this.options.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone }))
-      let isCurrentHour = i === this.getHours(_date)
+      let isCurrentHour = i === this.#getHours(_date)
       let hour = {
         date: new Date(date).toLocaleString(
             this.options?.format?.locales || 
@@ -409,11 +423,11 @@ export class Calendar<T extends {} = any> {
               timeZone: this.options?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone
             }
           ),
-        ...(this.options?.includeMinutes) && { minutes: this.getMinutesInHour(i, date) },
+        ...(this.options?.includeMinutes) && { minutes: this.#getMinutesInHour(i, date) },
         hour: i,
-        day: this.getDate(date),
-        month: this.getMonth(date),
-        year: this.getFullYear(date),
+        day: this.#getDate(date),
+        month: this.#getMonth(date),
+        year: this.#getFullYear(date),
         isCurrentHour,
         ...pluginResults
       }
@@ -423,7 +437,7 @@ export class Calendar<T extends {} = any> {
     return hours as Hour<T>[]
   }
 
-  getMinutesInHour(hour: number, date: Date) {
+  #getMinutesInHour(hour: number, date: Date) {
     const minutes: Minute[] = []
     for (let i = 0; i < 60; i++) {
       const _date = new Date(date.getTime())
@@ -451,10 +465,10 @@ export class Calendar<T extends {} = any> {
           ),
         minute: i,
         hour,
-        day: this.getDate(_date),
-        month: this.getMonth(_date),
-        year: this.getFullYear(_date),
-        isCurrentMinute: this.getMinutes(_date) === this.getMinutes(this.today),
+        day: this.#getDate(_date),
+        month: this.#getMonth(_date),
+        year: this.#getFullYear(_date),
+        isCurrentMinute: this.#getMinutes(_date) === this.#getMinutes(this.today),
         ...pluginResults
       })
     }

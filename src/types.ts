@@ -18,7 +18,11 @@ export type Options = {
   includeDays?: boolean
   includeHours?: boolean
   includeMinutes?: boolean
-  createPrevNext?: boolean
+  // Pass in true to create prev and next *default
+  // Pass in false to create only current 
+  // Pass in [true, false] to create prev and current
+  // Pass in [false, true] to create current and next
+  createPrevNext?: boolean | boolean[] | { prev?: boolean, next?: boolean }
   timeZone?: Timezone
   startOfDay?: number
   hoursInDay?: number
@@ -132,3 +136,32 @@ export type Year<T extends {} = any> = {
 	year: number
   isCurrentYear: boolean
 } & T
+
+export type View<T extends {} = any> = {
+  months?: Month<T>[]
+	year?: number
+  isCurrentYear?: boolean
+  weeks?: Week<T>[]
+	month?: number
+  isCurrentMonth?: boolean
+  days?: Day<T>[]
+	week?: number
+  isCurrentWeek?: boolean
+  hours?: Hour<T>[]
+  date?: string
+  isToday?: boolean
+  isWeekend?: boolean
+  day?: string | number
+	minutes?: Minute<T>[]
+	hour?: number
+	isCurrentHour?: boolean
+	minute?: number
+	isCurrentMinute: boolean
+} & T
+
+export type CreateMatrixOutputForViewAsPromiseArgs<T extends {} = any> = [
+  options: Options, 
+  currentCalendar: Promise<View<T>>, 
+  prevCalendar?: Promise<View<T>>,
+  nextCalendar?: Promise<View<T>>,
+]
